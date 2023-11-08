@@ -13,6 +13,8 @@ fn main() {
         folder: "out".to_string(),
     };
 
+    std::fs::create_dir_all(&config.folder).unwrap();
+
     tile_image(config).unwrap();
     // return result code?
 }
