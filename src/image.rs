@@ -12,16 +12,14 @@ fn save_sub_image(img: &mut image::DynamicImage, x: u32, y: u32, config: &Config
 }
 
 pub fn tile_image(config: Config) -> Result<(), Error> {
-    let mut img = ImageReader::open(&config.filename)?.decode()?;
+    let mut img: image::DynamicImage = ImageReader::open(&config.filename)?.decode()?;
 
     let x_max = img.width() / config.tilesize;
     let y_max = img.height() / config.tilesize;
 
-    if x_max >= 1 && y_max >=1 {
-        for x in 0..x_max {
-            for y in 0..y_max {
-                save_sub_image(&mut img, x, y, &config)?;
-            }
+    for x in 0..x_max {
+        for y in 0..y_max {
+            save_sub_image(&mut img, x, y, &config)?;
         }
     }
     return Ok(());
