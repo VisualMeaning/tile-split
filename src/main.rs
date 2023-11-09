@@ -8,15 +8,16 @@ fn main() {
     // make Config
     let config = Config {
         tilesize: 1024,
-        filename: "test.png".to_string(),
+        filename: "test.png",
         zoomlevel: 5,
-        folder: "out".to_string(),
+        folder: "out",
     };
 
     std::fs::create_dir_all(&config.folder).unwrap();
 
+    let zoom = config.zoomlevel;
     let tile_image = TileImage{
-        config: config,
+        config: &config,
     };
-    tile_image.iter().save(format!("{p}/{z}_{x}_{y}.png", p=config.folder, z=config.zoomlevel, x = x, y = y))?;
+    tile_image.iter(&tile_image.create_img().unwrap()).for_each(|(img, x, y)| img.to_image().save(format!("{p}/{z}_{x}_{y}.png", p=config.folder, z=zoom, x = x, y = y)).unwrap());
 }
