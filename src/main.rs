@@ -16,8 +16,8 @@ fn main() {
     let zoomlevel: u8 = env::var("ZOOMLEVEL").map(|s| s.parse::<u8>()).unwrap_or(Ok(5)).unwrap_or(5);
 
     let config: Config = Config {
-        filename,
-        folder,
+        filename: &filename,
+        folder: &folder,
         format,
         tilesize: 256,
         zoomlevel,
