@@ -11,7 +11,7 @@ impl<'c> TileImage<'c> {
         Ok(ImageReader::open(&self.config.filename)?.decode()?)
     }
 
- pub fn iter<'d>(&self, img: &'d DynamicImage) -> TilesIterator<'d> {
+    pub fn iter<'d>(&self, img: &'d DynamicImage) -> TilesIterator<'d> {
         TilesIterator {
             img,
             x_index: 0,
