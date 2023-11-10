@@ -35,16 +35,20 @@ pub struct TilesIterator<'d> {
 impl<'d> Iterator for TilesIterator<'d> {
     type Item = (SubImage<&'d DynamicImage>, u32, u32);
     fn next(&mut self) -> Option<Self::Item> {
+        // reaching the end of slicing, return None
         if self.x_index == self.x_max - 1 && self.y_index == self.y_max - 1 {
             None
         } else {
             let x1 = self.x_index * self.tilesize;
             let y1 = self.y_index * self.tilesize;
+            // slice image
             let result = (self.img.view(x1, y1, self.tilesize, self.tilesize), self.x_index, self.y_index);
             if self.x_index == self.x_max - 1 {
+                // start with a new row
                 self.x_index = 0;
                 self.y_index += 1;
             } else  {
+                // move on to the next block in the row
                 self.x_index += 1;
             }
             Some(result)

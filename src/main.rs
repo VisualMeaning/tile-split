@@ -1,7 +1,6 @@
 use std::env;
 use tile_split::{Config, TileImage};
 
-// what is main() returning?
 fn main() {
     // Exit with an error if there is no filename arg
     let filename: String = match env::args().nth(1) {
@@ -22,12 +21,16 @@ fn main() {
         tilesize: 256,
         zoomlevel,
     };
-
+    
+    // create output folder
     std::fs::create_dir_all(&config.folder).unwrap();
 
     let zoom = config.zoomlevel;
+    // instantiate TileImage
     let tile_image = TileImage{
         config: &config,
     };
+    // save each sliced image
+    // TODO: this is too long and unreadable
     tile_image.iter(&tile_image.create_img().unwrap()).for_each(|(img, x, y)| img.to_image().save(format!("{p}/{z}_{x}_{y}.png", p=config.folder, z=zoom, x = x, y = y)).unwrap());
 }
