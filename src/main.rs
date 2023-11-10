@@ -1,25 +1,43 @@
-use std::env;
+use clap::Parser;
 use tile_split::{Config, TileImage};
 
-fn main() {
-    // Exit with an error if there is no filename arg
-    let filename: String = match env::args().nth(1) {
-        Some(arg) => arg.to_string(),
-        None => {
-            eprintln!("Error: Please provide a filename.");
-            std::process::exit(1);
-        }
-    };
-    let folder: String = env::var("OUTDIR").unwrap_or("out".to_string());
-    let format: String = env::var("FMT").unwrap_or("png".to_string());
-    let zoomlevel: u8 = env::var("ZOOMLEVEL").map(|s| s.parse::<u8>()).unwrap_or(Ok(5)).unwrap_or(5);
+/// Split input image files into sets of tiles.
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Input PNG filename.
+    filename: String, 
 
-    let config: Config = Config {
-        filename: &filename,
-        folder: &folder,
-        format,
-        tilesize: 256,
-        zoomlevel,
+    /// Zoomlevel of input PNG file
+    #[arg(short='l', long, env)]
+    zoomlevel: u8,
+
+    /// Zoomrange to slice tiles for, currently unused.
+    #[arg(short='r', long, required(false), num_args=1.., value_delimiter = ' ')]
+    zoomrange: Vec<u8>,
+
+    /// Location to write output tiles to.
+    #[arg(short, long, env, required(false), default_value("out"))]
+    output_dir: String,
+
+    /// Dimension of output tiles, in pixels.
+    #[arg(short='s', long, required(false), default_value("256"))]
+    tilesize: u32,
+
+    /// Type of output tiles, currently unused.
+    #[arg(short='f', long, env, required(false), default_value("png"))]
+    tileformat: String,
+}
+
+fn main() {
+    let args = Args::parse();
+
+    let config = Config {
+            tilesize: args.tilesize,
+            filename: &args.filename,
+            zoomlevel: args.zoomlevel,
+            folder: &args.output_dir,
+            tileformat: &args.tileformat,
     };
     
     // create output folder

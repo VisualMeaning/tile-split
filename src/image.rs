@@ -8,7 +8,10 @@ pub struct TileImage<'c> {
 
 impl<'c> TileImage<'c> {
     pub fn create_img(&self) -> Result<DynamicImage, Error> {
-        Ok(ImageReader::open(&self.config.filename)?.decode()?)
+        let mut reader = ImageReader::open(&self.config.filename)?;
+        // Default memory limit of 512MB is too small for level 6+ PNGs
+        reader.no_limits();
+        Ok(reader.decode()?)
     }
 
     pub fn iter<'d>(&self, img: &'d DynamicImage) -> TilesIterator<'d> {
