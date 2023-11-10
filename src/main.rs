@@ -1,3 +1,4 @@
+use std::env;
 use tile_split::{Config, TileImage};
 
 // what is main() returning?
@@ -14,11 +15,12 @@ fn main() {
     let format: String = env::var("FMT").unwrap_or("png".to_string());
     let zoomlevel: u8 = env::var("ZOOMLEVEL").map(|s| s.parse::<u8>()).unwrap_or(Ok(5)).unwrap_or(5);
 
-let config = Config {
-        tilesize: 1024,
-        filename: "test.png",
-        zoomlevel: 5,
-        folder: "out",
+    let config: Config = Config {
+        filename,
+        folder,
+        format,
+        tilesize: 256,
+        zoomlevel,
     };
 
     std::fs::create_dir_all(&config.folder).unwrap();
