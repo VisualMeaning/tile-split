@@ -35,18 +35,19 @@ pub struct TilesIterator<'d> {
 impl<'d> Iterator for TilesIterator<'d> {
     type Item = (SubImage<&'d DynamicImage>, u32, u32);
     fn next(&mut self) -> Option<Self::Item> {
-        if self.x_index == self.x_max && self.y_index == self.y_max {
+        if self.x_index == self.x_max - 1 && self.y_index == self.y_max - 1 {
             None
         } else {
-            if self.x_index == self.x_max {
+            let x1 = self.x_index * self.tilesize;
+            let y1 = self.y_index * self.tilesize;
+            let result = (self.img.view(x1, y1, self.tilesize, self.tilesize), self.x_index, self.y_index);
+            if self.x_index == self.x_max - 1 {
                 self.x_index = 0;
                 self.y_index += 1;
             } else  {
                 self.x_index += 1;
             }
-            let x1 = self.x_index * self.tilesize;
-            let y1 = self.y_index * self.tilesize;
-            Some((self.img.view(x1, y1, self.tilesize, self.tilesize), self.x_index, self.y_index))
+            Some(result)
         }
     }
 }
