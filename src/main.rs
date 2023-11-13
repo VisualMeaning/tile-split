@@ -58,11 +58,18 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
+    let zomr = if args.zoomrange.len() == 0 {
+        vec![args.zoomlevel]
+    }
+    else {
+        args.zoomrange
+    };
+
     let config = Config {
             tilesize: args.tilesize,
             filename: &args.filename,
             zoomlevel: args.zoomlevel,
-            zoomrange: &args.zoomrange,
+            zoomrange: &zomr,
             folder: &args.output_dir,
             tileformat: &args.tileformat,
     };
