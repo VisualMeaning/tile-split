@@ -5,7 +5,7 @@ use image::{DynamicImage, SubImage, ImageResult};
 
 fn save_subimage(img: &SubImage<&DynamicImage>, x: u32, y: u32, z: u8, config: &Config) -> ImageResult<()> {
     img.to_image().save(format!(
-        "{p}/{z}_{x}_{y}.{fmt}",
+        "{p}/{z}-{x}-{y}.{fmt}",
         p=config.folder,
         z=z,
         x=x,
