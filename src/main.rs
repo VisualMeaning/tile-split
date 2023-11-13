@@ -1,15 +1,24 @@
 use clap::Parser;
-use tile_split::{Config, TileImage};
+use tile_split::{Config, TileImage, Resizer};
 use image::{DynamicImage, SubImage};
 
 
-fn save_subimage(img: &SubImage<&DynamicImage>, x: u32, y: u32, config: &Config) {
+fn save_subimage(img: &SubImage<&DynamicImage>, x: u32, y: u32, z: u8, config: &Config) {
     img.to_image().save(format!(
         "{p}/{z}_{x}_{y}.{fmt}",
         p=config.folder,
-        z=config.zoomlevel,
+        z=z,
         x=x,
         y=y,
+        fmt=config.tileformat)
+    ).unwrap();
+}
+
+fn save_image(img: &DynamicImage, z: u8, config: &Config) {
+    img.save(format!(
+        "{p}/{z}.{fmt}",
+        p=config.folder,
+        z=z,
         fmt=config.tileformat)
     ).unwrap();
 }
@@ -40,6 +49,10 @@ struct Args {
     /// Type of output tiles, currently unused.
     #[arg(short='f', long, env, required(false), default_value("png"))]
     tileformat: String,
+
+    /// Output resized files
+    #[arg(long, env, required(false), num_args(0))]
+    save_resize: bool,
 }
 
 fn main() {
@@ -49,9 +62,11 @@ fn main() {
             tilesize: args.tilesize,
             filename: &args.filename,
             zoomlevel: args.zoomlevel,
+            zoomrange: &args.zoomrange,
             folder: &args.output_dir,
             tileformat: &args.tileformat,
     };
+    let save_resized = args.save_resize;
     
     // create output folder
     std::fs::create_dir_all(config.folder).unwrap();
@@ -62,8 +77,17 @@ fn main() {
     };
     let image = &tile_image.open_img().unwrap();
 
+    // resize (and save)
+    let resizer = Resizer::new(&config);
+    let resized_images = resizer.resize_range(image);
+
     // save each sliced image
-    tile_image
-        .iter(image)
-        .for_each(|(sub_img, x, y)| save_subimage(&sub_img, x, y, &config));
+    resized_images.iter().for_each(|(img, z)| {
+        if save_resized {
+            save_image(img, *z, &config)
+        }
+        tile_image
+            .iter(img)
+            .for_each(|(sub_img, x, y)| save_subimage(&sub_img, x, y, *z, &config));
+    });
 }
