@@ -7,7 +7,7 @@ pub struct TileImage<'c> {
 }
 
 impl<'c> TileImage<'c> {
-    pub fn create_img(&self) -> Result<DynamicImage, Error> {
+    pub fn open_img(&self) -> Result<DynamicImage, Error> {
         let mut reader = ImageReader::open(self.config.filename)?;
         // Default memory limit of 512MB is too small for level 6+ PNGs
         reader.no_limits();
@@ -39,7 +39,7 @@ impl<'d> Iterator for TilesIterator<'d> {
     type Item = (SubImage<&'d DynamicImage>, u32, u32);
     fn next(&mut self) -> Option<Self::Item> {
         // reaching the end of slicing, return None
-        if self.x_index == self.x_max - 1 && self.y_index == self.y_max - 1 {
+        if self.y_index == self.y_max {
             None
         } else {
             let x1 = self.x_index * self.tilesize;
