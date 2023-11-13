@@ -41,7 +41,7 @@ fn main() {
     };
     
     // create output folder
-    std::fs::create_dir_all(&config.folder).unwrap();
+    std::fs::create_dir_all(config.folder).unwrap();
 
     let zoom = config.zoomlevel;
     // instantiate TileImage
