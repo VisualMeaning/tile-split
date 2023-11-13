@@ -1,9 +1,9 @@
 use clap::Parser;
 use tile_split::{Config, TileImage, Resizer};
-use image::{DynamicImage, SubImage};
+use image::{DynamicImage, SubImage, ImageResult};
 
 
-fn save_subimage(img: &SubImage<&DynamicImage>, x: u32, y: u32, z: u8, config: &Config) {
+fn save_subimage(img: &SubImage<&DynamicImage>, x: u32, y: u32, z: u8, config: &Config) -> ImageResult<()> {
     img.to_image().save(format!(
         "{p}/{z}_{x}_{y}.{fmt}",
         p=config.folder,
@@ -11,16 +11,16 @@ fn save_subimage(img: &SubImage<&DynamicImage>, x: u32, y: u32, z: u8, config: &
         x=x,
         y=y,
         fmt=config.tileformat)
-    ).unwrap();
+    )
 }
 
-fn save_image(img: &DynamicImage, z: u8, config: &Config) {
+fn save_image(img: &DynamicImage, z: u8, config: &Config) -> ImageResult<()> {
     img.save(format!(
         "{p}/{z}.{fmt}",
         p=config.folder,
         z=z,
         fmt=config.tileformat)
-    ).unwrap();
+    )
 }
 
 /// Split input image files into sets of tiles.
@@ -50,7 +50,7 @@ struct Args {
     #[arg(short='f', long, env, required(false), default_value("png"))]
     tileformat: String,
 
-    /// Output resized files
+    /// Save the resized files
     #[arg(long, env, required(false), num_args(0))]
     save_resize: bool,
 }
@@ -81,13 +81,14 @@ fn main() {
     let resizer = Resizer::new(&config);
     let resized_images = resizer.resize_range(image);
 
+    if save_resized {
+        resized_images.iter().for_each(|(img, z)| save_image(img, *z, &config).unwrap())
+    }
+
     // save each sliced image
     resized_images.iter().for_each(|(img, z)| {
-        if save_resized {
-            save_image(img, *z, &config)
-        }
         tile_image
             .iter(img)
-            .for_each(|(sub_img, x, y)| save_subimage(&sub_img, x, y, *z, &config));
+            .for_each(|(sub_img, x, y)| save_subimage(&sub_img, x, y, *z, &config).unwrap());
     });
 }
