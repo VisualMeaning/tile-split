@@ -1,5 +1,18 @@
 use clap::Parser;
 use tile_split::{Config, TileImage};
+use image::{DynamicImage, SubImage};
+
+
+fn save_subimage(img: &SubImage<&DynamicImage>, x: u32, y: u32, config: &Config) {
+    img.to_image().save(format!(
+        "{p}/{z}_{x}_{y}.{fmt}",
+        p=config.folder,
+        z=config.zoomlevel,
+        x=x,
+        y=y,
+        fmt=config.tileformat)
+    ).unwrap();
+}
 
 /// Split input image files into sets of tiles.
 #[derive(Parser, Debug)]
@@ -41,14 +54,16 @@ fn main() {
     };
     
     // create output folder
-    std::fs::create_dir_all(&config.folder).unwrap();
+    std::fs::create_dir_all(config.folder).unwrap();
 
-    let zoom = config.zoomlevel;
     // instantiate TileImage
     let tile_image = TileImage{
         config: &config,
     };
+    let image = &tile_image.open_img().unwrap();
+
     // save each sliced image
-    // TODO: this is too long and unreadable
-    tile_image.iter(&tile_image.create_img().unwrap()).for_each(|(img, x, y)| img.to_image().save(format!("{p}/{z}_{x}_{y}.png", p=config.folder, z=zoom, x = x, y = y)).unwrap());
+    tile_image
+        .iter(image)
+        .for_each(|(sub_img, x, y)| save_subimage(&sub_img, x, y, &config));
 }
