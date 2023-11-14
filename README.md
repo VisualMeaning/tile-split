@@ -46,6 +46,7 @@ Options:
   -o, --output-dir <OUTPUT_DIR>   Location to write output tiles to [env: OUTPUT_DIR=] [default: out]
   -s, --tilesize <TILESIZE>       Dimension of output tiles, in pixels [default: 256]
   -f, --tileformat <TILEFORMAT>   Type of output tiles, currently unused [env: TILEFORMAT=] [default: png]
+      --save-resize               Save the resized files [env: SAVE_RESIZE=]
   -h, --help                      Print help
   -V, --version                   Print version
 ```
