@@ -1,6 +1,6 @@
 # Slicing map tiles from illustrations with Rust
 
-The goal is to recreate the functionality of tiles slicing from `imagemagick` in Rust. The slicing time has shown to be siginificantly reduced, and the built binary can be run as a platform agnostic program.
+The goal is to recreate the functionality of tiles slicing from `imagemagick` in Rust. The slicing time has shown to be significantly reduced, and the built binary can be run as a platform agnostic program.
 
 ## Installation for code contribution
 
@@ -18,11 +18,17 @@ If you want to generate a distributable binary, run `cargo build -r` to create a
 
 ### Usage
 
-We give the binary a PNG file as input, and we tell it what zoomlevel that PNG file is via the --zoomlevel arg. Currently it will just slice the whole thing into tiles of --tilesize dimensions. If we want to do a different zoomlevel, we need to give it a different-sized PNG. Using the --zoomrange command to specify which zoomlevels we want tiles for. For example: 
+The binary takes a single PNG file as an input. We tell the binary what zoomlevel the PNG file is via the `--zoomlevel` arg, which is compulsory. To slice a single zoom level PNG, the command is
 
-`tile-split level-5.png --zoomlevel 5 --zoomrange 2 3 4 5`
+    tile-split level-5.png --zoomlevel 5
+
+We can also optionally take a PNG for a high zoom level, downsize it to create PNGs of lower zoom levels, and then also slice those into tiles. The `--zoomrange` argument is used to specify which zoomlevels we want to generate tiles for.
+
+    tile-split level-5.png --zoomlevel 5 --zoomrange 2 3 4 5
 
 This would generate tiles for zoomlevels 2, 3, 4 and 5 from the single level 5 PNG we give it.
+
+Note that we cannot upscale an input PNG to higher zoomlevels, only downscale -- so all zoomlevels passed via `--zoomrange` must be equal to or less than the input PNG zoomlevel passed via `--zoomlevel`.
 
 Run `tile-split --help` for more command description.
 
@@ -36,7 +42,7 @@ Arguments:
 
 Options:
   -l, --zoomlevel <ZOOMLEVEL>     Zoomlevel of input PNG file [env: ZOOMLEVEL=]
-  -r, --zoomrange <ZOOMRANGE>...  Zoomrange to slice tiles for, currently unused
+  -r, --zoomrange <ZOOMRANGE>...  Zoomrange to slice tiles for
   -o, --output-dir <OUTPUT_DIR>   Location to write output tiles to [env: OUTPUT_DIR=] [default: out]
   -s, --tilesize <TILESIZE>       Dimension of output tiles, in pixels [default: 256]
   -f, --tileformat <TILEFORMAT>   Type of output tiles, currently unused [env: TILEFORMAT=] [default: png]

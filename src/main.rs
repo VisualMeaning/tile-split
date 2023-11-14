@@ -39,7 +39,7 @@ struct Args {
     #[arg(short = 'l', long, env)]
     zoomlevel: u8,
 
-    /// Zoomrange to slice tiles for, currently unused.
+    /// Zoomrange to slice tiles for
     #[arg(short='r', long, required(false), num_args=1.., value_delimiter = ' ')]
     zoomrange: Vec<u8>,
 
