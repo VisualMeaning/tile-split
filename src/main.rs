@@ -4,8 +4,8 @@ use tile_split::{Config, Resizer, TileImage};
 
 fn save_subimage(
     img: &SubImage<&DynamicImage>,
-    x: u32,
-    y: u32,
+    x: u16,
+    y: u16,
     z: u8,
     config: &Config,
 ) -> ImageResult<()> {
@@ -49,7 +49,7 @@ struct Args {
 
     /// Dimension of output tiles, in pixels.
     #[arg(short = 's', long, required(false), default_value("256"))]
-    tilesize: u32,
+    tilesize: u16,
 
     /// Type of output tiles, currently unused.
     #[arg(short = 'f', long, env, required(false), default_value("png"))]

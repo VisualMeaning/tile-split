@@ -11,7 +11,7 @@ pub struct Resizer<'c> {
 impl<'c> Resizer<'c> {
     fn _check_dimension(&self, img: &'c DynamicImage) {
         let (img_width, img_height) = (img.width(), img.height());
-        let max_dimension_size = self.config.tilesize << self.config.zoomlevel;
+        let max_dimension_size = (self.config.tilesize << self.config.zoomlevel) as u32;
         if img_width != max_dimension_size || img_height != max_dimension_size {
             panic!(
                 "Image of size {w}x{h} cannot be split into
@@ -49,7 +49,7 @@ impl<'c> Resizer<'c> {
             .zoomrange
             .iter()
             .map(|&x| {
-                let t_size = self.config.tilesize << x;
+                let t_size = (self.config.tilesize << x) as u32;
                 (Self::_resize(img, t_size, t_size), x)
             })
             .collect()
