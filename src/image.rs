@@ -19,8 +19,8 @@ impl<'c> TileImage<'c> {
         TilesIterator {
             img,
             morton_idx: 0,
-            morton_idx_max: (img.width() / self.config.tilesize as u32)
-                * (img.height() / self.config.tilesize as u32),
+            morton_idx_max: img.width() / self.config.tilesize * img.height()
+                / self.config.tilesize,
             tilesize: self.config.tilesize,
         }
     }
@@ -30,30 +30,23 @@ pub struct TilesIterator<'d> {
     img: &'d DynamicImage,
     morton_idx: u32,
     morton_idx_max: u32,
-    tilesize: u16,
+    tilesize: u32,
 }
 
 impl<'d> Iterator for TilesIterator<'d> {
-    type Item = (SubImage<&'d DynamicImage>, u16, u16);
+    type Item = (SubImage<&'d DynamicImage>, u32, u32);
     fn next(&mut self) -> Option<Self::Item> {
         // reaching the end of slicing, return None
         let coord = coord_of(self.morton_idx);
+        let x = coord.0 as u32;
+        let y = coord.1 as u32;
         if self.morton_idx == self.morton_idx_max {
             None
         } else {
-            let x1 = coord.0 * self.tilesize;
-            let y1 = coord.1 * self.tilesize;
+            let x1 = x * self.tilesize;
+            let y1 = y * self.tilesize;
             // slice image
-            let result = (
-                self.img.view(
-                    x1.into(),
-                    y1.into(),
-                    self.tilesize.into(),
-                    self.tilesize.into(),
-                ),
-                coord.0,
-                coord.1,
-            );
+            let result = (self.img.view(x1, y1, self.tilesize, self.tilesize), x, y);
             self.morton_idx += 1;
             Some(result)
         }
