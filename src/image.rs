@@ -12,15 +12,23 @@ impl<'c> TileImage<'c> {
         let mut reader = ImageReader::open(self.config.filename)?;
         // Default memory limit of 512MB is too small for level 6+ PNGs
         reader.no_limits();
-        Ok(reader.decode()?)
+
+        let img = reader.decode()?;
+        if img.width() != img.height() {
+            return Err("Image is not square.".into());
+        }
+        Ok(img)
     }
 
     pub fn iter<'d>(&self, img: &'d DynamicImage) -> TilesIterator<'d> {
+        let width_in_tiles = img.width() / self.config.tilesize;
+        let height_in_tiles = img.height() / self.config.tilesize;
+        let morton_idx_max = width_in_tiles * height_in_tiles;
+
         TilesIterator {
             img,
             morton_idx: 0,
-            morton_idx_max: img.width() / self.config.tilesize * img.height()
-                / self.config.tilesize,
+            morton_idx_max,
             tilesize: self.config.tilesize,
         }
     }
@@ -36,7 +44,7 @@ pub struct TilesIterator<'d> {
 impl<'d> Iterator for TilesIterator<'d> {
     type Item = (SubImage<&'d DynamicImage>, u32, u32);
     fn next(&mut self) -> Option<Self::Item> {
-        // reaching the end of slicing, return None
+        // Reaching the end of slicing, return None
         let coord = coord_of(self.morton_idx);
         let x = coord.0 as u32;
         let y = coord.1 as u32;
@@ -45,7 +53,7 @@ impl<'d> Iterator for TilesIterator<'d> {
         } else {
             let x1 = x * self.tilesize;
             let y1 = y * self.tilesize;
-            // slice image
+            // Slice image
             let result = (self.img.view(x1, y1, self.tilesize, self.tilesize), x, y);
             self.morton_idx += 1;
             Some(result)
