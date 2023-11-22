@@ -29,7 +29,7 @@ fn save_image(img: &DynamicImage, z: u8, config: &Config) -> ImageResult<()> {
     )
 }
 
-fn parse_zoomrange(arg: &str) -> Result<RangeInclusive<u8>, ParseIntError> {
+fn parse_range(arg: &str) -> Result<RangeInclusive<u8>, ParseIntError> {
     match arg
         .splitn(2, &['-', ' '])
         .map(str::parse)
@@ -53,7 +53,7 @@ struct Args {
     zoomlevel: u8,
 
     /// Zoomrange to slice tiles for.
-    #[arg(short='r', long, required(false), value_parser = parse_zoomrange)]
+    #[arg(short='r', long, required(false), value_parser = parse_range)]
     zoomrange: RangeInclusive<u8>,
 
     /// Location to write output tiles to.
@@ -67,6 +67,10 @@ struct Args {
     /// Type of output tiles.
     #[arg(long, env, required(false), default_value("png"))]
     tileformat: String,
+
+    /// Subset morton range of tiles to slice.
+    #[arg(short='t', long, required(false), value_parser = parse_range)]
+    target_range: RangeInclusive<u32>,
 
     /// Save the resized files
     #[arg(long, env, action)]
@@ -89,6 +93,7 @@ fn main() {
         zoomrange: zomr,
         folder: &args.output_dir,
         tileformat: &args.tileformat,
+        target_range: args.target_range,
     };
     let save_resized = args.save_resize;
 
