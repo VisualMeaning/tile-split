@@ -24,8 +24,9 @@ fn args_file_only() {
 
 #[test]
 fn args_file_and_level() {
-    let args = parse(["bin", "-l", "7", "a-file.png", "-r", "0-5"]);
+    let args = parse(["bin", "-l", "7", "a-file.png", "-r", "0-5", "-t", "0-333"]);
     assert_eq!(args.filename.as_path().display().to_string(), "a-file.png");
     assert_eq!(args.zoomlevel, 7);
     assert_eq!(args.zoomrange, 0..=5);
+    assert_eq!(args.targetrange, 0..=333);
 }

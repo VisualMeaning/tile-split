@@ -31,7 +31,7 @@ impl<'c> TileImage<'c> {
             morton_idx: 0,
             morton_idx_max,
             tilesize: self.config.tilesize,
-            target_range: self.config.target_range.clone(),
+            targetrange: self.config.targetrange.clone(),
         }
     }
 }
@@ -41,7 +41,7 @@ pub struct TilesIterator<'d> {
     morton_idx: u32,
     morton_idx_max: u32,
     tilesize: u32,
-    target_range: RangeInclusive<u32>,
+    targetrange: RangeInclusive<u32>,
 }
 
 impl<'d> Iterator for TilesIterator<'d> {
@@ -51,7 +51,7 @@ impl<'d> Iterator for TilesIterator<'d> {
         let coord = coord_of(self.morton_idx);
         let x = coord.0 as u32;
         let y = coord.1 as u32;
-        if self.morton_idx == self.morton_idx_max || !self.target_range.contains(&(self.morton_idx))
+        if !self.targetrange.contains(&self.morton_idx)
         {
             None
         } else {
