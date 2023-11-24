@@ -18,15 +18,15 @@ If you want to generate a distributable binary, run `cargo build -r` to create a
 
 ### Usage
 
-The binary takes a single PNG file as an input. We tell the binary what zoomlevel the PNG file is via the `--zoomlevel` arg, which is compulsory. To slice a single zoom level PNG, the command is
+The binary takes a single PNG file as an input, which must be a square. We tell the binary what zoomlevel the PNG file is via the `--zoomlevel` arg, which is compulsory. To slice a single zoom level PNG, the command is
 
     tile-split level-5.png --zoomlevel 5
 
-We can also optionally take a PNG for a high zoom level, downsize it to create PNGs of lower zoom levels, and then also slice those into tiles. The `--zoomrange` argument is used to specify which zoomlevels we want to generate tiles for.
+We can also optionally take a PNG for a high zoom level, downsize it to create PNGs of lower zoom levels, and then also slice those into tiles. The `--zoomrange` argument is used to specify which zoomlevels we want to generate tiles for. The `--targetrange` argument specifies subset of tiles to slice, if not provided the full range of tiles is sliced.
 
-    tile-split level-5.png --zoomlevel 5 --zoomrange 2 3 4 5
+    tile-split level-5.png --zoomlevel 5 --zoomrange 2-5 --targetrange 0-44
 
-This would generate tiles for zoomlevels 2, 3, 4 and 5 from the single level 5 PNG we give it.
+This would generate tiles for zoomlevels 2, 3, 4 and 5 from the single level 5 PNG and slice a subset of 45 tiles for each level.
 
 Note that we cannot upscale an input PNG to higher zoomlevels, only downscale -- so all zoomlevels passed via `--zoomrange` must be equal to or less than the input PNG zoomlevel passed via `--zoomlevel`.
 
@@ -43,6 +43,7 @@ Arguments:
 Options:
   -l, --zoomlevel <ZOOMLEVEL>     Zoomlevel of input PNG file [env: ZOOMLEVEL=]
   -r, --zoomrange <ZOOMRANGE>...  Zoomrange to slice tiles for
+  -t, --targetrange               Targetrange to slice subset of tiles. Optional.
   -o, --output-dir <OUTPUT_DIR>   Location to write output tiles to [env: OUTPUT_DIR=] [default: out]
   -s, --tilesize <TILESIZE>       Dimension of output tiles, in pixels [default: 256]
   -f, --tileformat <TILEFORMAT>   Type of output tiles, currently unused [env: TILEFORMAT=] [default: png]
