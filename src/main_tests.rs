@@ -23,10 +23,26 @@ fn args_file_only() {
 }
 
 #[test]
-fn args_file_and_level() {
+fn all_args() {
     let args = parse(["bin", "-l", "7", "a-file.png", "-r", "0-5", "-t", "0-333"]);
     assert_eq!(args.filename.as_path().display().to_string(), "a-file.png");
     assert_eq!(args.zoomlevel, 7);
     assert_eq!(args.zoomrange, 0..=5);
     assert_eq!(args.targetrange, Some(0..=333));
+}
+
+#[test]
+fn open_img_non_square() {
+    let img_data: Vec<u8> = vec![255; 300 * 200 * 3]; // RGB image 300 x 200
+    let config = Config {
+        filename: &PathBuf::from(String::from_utf8_lossy(&img_data).to_string()),
+        tilesize: 50,
+        targetrange: None,
+        zoomlevel: 6,
+        zoomrange: 0..=5,
+        folder: &PathBuf::from("out"),
+        tileformat: "png",
+    };
+    let tile_image = TileImage { config: &config };
+    assert!(tile_image.open_img().is_err());
 }
