@@ -15,6 +15,9 @@ impl<'c> TileImage<'c> {
         reader.no_limits();
 
         let img = reader.decode()?;
+
+        // TODO: Refactor the image load to be done separately,
+        // so the check and error can happen in a function that receives config and an already loaded image
         if img.width() != img.height() {
             return Err("Image is not square.".into());
         }
