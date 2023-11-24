@@ -71,7 +71,7 @@ struct Args {
 
     /// Subset morton range of tiles to slice.
     #[arg(short='t', long, required(false), value_parser = parse_range::<u32>)]
-    targetrange: RangeInclusive<u32>,
+    targetrange: Option<RangeInclusive<u32>>,
 
     /// Save the resized files
     #[arg(long, env, action)]

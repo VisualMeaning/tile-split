@@ -41,7 +41,7 @@ pub struct TilesIterator<'d> {
     morton_idx: u32,
     morton_idx_max: u32,
     tilesize: u32,
-    targetrange: RangeInclusive<u32>,
+    targetrange: Option<RangeInclusive<u32>>,
 }
 
 impl<'d> Iterator for TilesIterator<'d> {
@@ -51,16 +51,17 @@ impl<'d> Iterator for TilesIterator<'d> {
         let coord = coord_of(self.morton_idx);
         let x = coord.0 as u32;
         let y = coord.1 as u32;
-        if !self.targetrange.contains(&self.morton_idx)
-        {
-            None
-        } else {
-            let x1 = x * self.tilesize;
-            let y1 = y * self.tilesize;
-            // Slice image
-            let result = (self.img.view(x1, y1, self.tilesize, self.tilesize), x, y);
-            self.morton_idx += 1;
-            Some(result)
+        match &self.targetrange {
+            Some(targetrange) if !targetrange.contains(&self.morton_idx) => None,
+            None if self.morton_idx == self.morton_idx_max => None,
+            _ => {
+                let x1 = x * self.tilesize;
+                let y1 = y * self.tilesize;
+                // Slice image
+                let result = (self.img.view(x1, y1, self.tilesize, self.tilesize), x, y);
+                self.morton_idx += 1;
+                Some(result)
+            }
         }
     }
 }
