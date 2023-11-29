@@ -29,9 +29,14 @@ impl<'c> TileImage<'c> {
         let height_in_tiles = img.height() / self.config.tilesize;
         let morton_idx_max = width_in_tiles * height_in_tiles;
 
+        let morton_idx = match &self.config.targetrange {
+            Some(targetrange) => *targetrange.start(),
+            None => 0,
+        };
+
         TilesIterator {
             img,
-            morton_idx: 0,
+            morton_idx,
             morton_idx_max,
             tilesize: self.config.tilesize,
             targetrange: self.config.targetrange.clone(),
