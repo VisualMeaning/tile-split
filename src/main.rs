@@ -69,13 +69,17 @@ struct Args {
     #[arg(long, env, required(false), default_value("png"))]
     tileformat: String,
 
-    /// Subset morton range of tiles to slice.
-    #[arg(short='t', long, required(false), value_parser = parse_range::<u32>)]
-    targetrange: Option<RangeInclusive<u32>>,
-
     /// Save the resized files
     #[arg(long, env, action)]
     save_resize: bool,
+
+    /// Index of the function in functions range.
+    #[arg(long, required(true))]
+    functionindex: u32,
+
+    /// Number of how many functions in total.
+    #[arg(long, required(false), default_value("4"))]
+    totalfunction: u32,
 }
 
 fn main() {
@@ -87,6 +91,54 @@ fn main() {
         args.zoomrange
     };
 
+    let save_resized = args.save_resize;
+
+    // create output folder
+    std::fs::create_dir_all(&args.output_dir).unwrap();
+
+    // calculate total number of tiles required in zoomrange
+    let totaltiles: u32 = zomr.clone().reduce(|acc, x| {
+        acc + 1 << (x * 2)
+    }).unwrap().into();
+
+    // calculte how many tiles to slice
+    let average = totaltiles / args.totalfunction;
+    let tilessliced= average * (args.functionindex - 1);
+    let mut tilesslicedafter = average * args.functionindex;
+    if args.functionindex == args.totalfunction {
+        tilesslicedafter = totaltiles;
+    }
+
+    // calculate the zoomrange and targetrange for current function
+    let mut startzoomrangetoslice: u8 = *zomr.clone().start();
+    let mut endzoomrangetoslice: u8= *zomr.clone().end();
+    let mut starttargetrange: Option<u32>  = None;
+    let mut endtargetrange: Option<u32>  = None;
+    for i in 1..args.totalfunction {
+        let mut tilessum = 0;
+        for j in zomr.clone() {
+            let currentzoomtiles = 1 << (j * 2);
+            if tilessum + currentzoomtiles >= tilessliced {
+                startzoomrangetoslice = j;
+                starttargetrange = Some(tilessum + currentzoomtiles - tilessliced);
+            } else {
+                tilessum += currentzoomtiles;
+            }
+        }
+    }
+    for i in 1..args.totalfunction {
+        let mut tilessum = 0;
+        for j in zomr.clone() {
+            let currentzoomtiles = 1 << (j * 2);
+            if tilessum + currentzoomtiles >= tilesslicedafter {
+                endzoomrangetoslice = j;
+                endtargetrange = Some(tilessum + currentzoomtiles - tilesslicedafter);
+            } else {
+                tilessum += currentzoomtiles;
+            }
+        }
+    }
+
     let config = Config {
         tilesize: args.tilesize,
         filename: &args.filename,
@@ -94,12 +146,10 @@ fn main() {
         zoomrange: zomr,
         folder: &args.output_dir,
         tileformat: &args.tileformat,
-        targetrange: args.targetrange,
+        functionindex: args.functionindex,
+        totalfunction: args.totalfunction,
+        zoomrangetoslice: (startzoomrangetoslice..=endzoomrangetoslice),
     };
-    let save_resized = args.save_resize;
-
-    // create output folder
-    std::fs::create_dir_all(config.folder).unwrap();
 
     // instantiate TileImage
     let tile_image = TileImage { config: &config };
@@ -113,8 +163,12 @@ fn main() {
     } else {
         // save each sliced image
         resized_images.for_each(|(img, z)| {
+            let mut targetrangetoslice: Option<RangeInclusive<u32>> = None;
+            if z == endzoomrangetoslice {
+                targetrangetoslice = Some((starttargetrange.unwrap()..=endtargetrange.unwrap()));
+            }
             tile_image
-                .iter(&img)
+                .iter(&img, targetrangetoslice)
                 .for_each(|(sub_img, x, y)| save_subimage(&sub_img, x, y, z, &config).unwrap());
         });
     }

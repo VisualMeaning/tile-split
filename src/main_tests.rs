@@ -28,5 +28,4 @@ fn all_args() {
     assert_eq!(args.filename.as_path().display().to_string(), "a-file.png");
     assert_eq!(args.zoomlevel, 7);
     assert_eq!(args.zoomrange, 0..=5);
-    assert_eq!(args.targetrange, Some(0..=333));
 }
