@@ -183,7 +183,7 @@ fn main() {
             // the end zoom level should slice tiles from 0 to endtargetrange
             } else if z == startzoomrangetoslice {
                 if 1 << (z * 2) > 1 {
-                    targetrangetoslice = Some(starttargetrange..=1 << (z * 2) - 1);
+                    targetrangetoslice = Some(starttargetrange..=(1 << (z * 2)) - 1);
                 }               
             } else if z == endzoomrangetoslice {
                 targetrangetoslice = Some(0..=endtargetrange);
