@@ -74,11 +74,11 @@ struct Args {
     save_resize: bool,
 
     /// Index of the function in functions range.
-    #[arg(long, required(true))]
+    #[arg(long, required(false), default_value("1"))]
     functionindex: u32,
 
-    /// Number of how many functions in total.
-    #[arg(long, required(false), default_value("4"))]
+    /// Number of functions in total.
+    #[arg(long, required(false), default_value("1"))]
     totalfunction: u32,
 }
 
@@ -96,28 +96,35 @@ fn main() {
     // create output folder
     std::fs::create_dir_all(&args.output_dir).unwrap();
 
-    // calculate total number of tiles required in zoomrange
+    // total number of tiles required in zoomrange
     let mut totaltiles = 0;
     zomr.clone().for_each(|x| {
         totaltiles += 1 << (x * 2);
     });
-
-    // calculte how many tiles to slice
     let average = totaltiles / args.totalfunction;
+    // number of tiles sliced by previous functions
     let tilessliced= average * (args.functionindex - 1);
+    // number of tiles to slice in this function, if it's the last
+    // function, it should slice all the remaining tiles
     let mut tilestoslice = average;
     if args.functionindex == args.totalfunction {
         tilestoslice = totaltiles - tilessliced;
     }
 
-    // calculate the zoomrange and targetrange for current function
+    // zoom level to start
     let mut startzoomrangetoslice: u8 = *zomr.clone().start();
-    let mut endzoomrangetoslice: u8= *zomr.clone().end();
+    // tile index to start
     let mut starttargetrange: u32 = 0;
+    // zoom level to stop
+    let mut endzoomrangetoslice: u8= *zomr.clone().end();
+    // tile index to stop
     let mut endtargetrange: u32  = 0;
 
+    // total of tiles in previous zoom levels
     let mut tilessum = 0;
+    // calculte startzoomrangetoslice and starttargetrange
     for i in zomr.clone() {
+        // number of tiles in this zoom level
         let currentzoomtiles = 1 << (i * 2);
         if tilessum + currentzoomtiles > tilessliced {
             startzoomrangetoslice = i;
@@ -128,7 +135,9 @@ fn main() {
         }
     };
     tilessum = 0;
+    // calculte endzoomrangetoslice and endtargetrange
     for i in zomr.clone() {
+        // number of tiles in this zoom level
         let currentzoomtiles = 1 << (i * 2);
         if tilessum + currentzoomtiles >= tilessliced + tilestoslice {
             endzoomrangetoslice = i;
@@ -164,10 +173,14 @@ fn main() {
         // save each sliced image
         resized_images.for_each(|(img, z)| {
             let mut targetrangetoslice: Option<RangeInclusive<u32>> = None;
+            // if startzoomrangetoslice is the same as endzoomrangetoslice, 
+            // then tiles to be sliced in this function are from same zoom level
             if startzoomrangetoslice == endzoomrangetoslice {
                 if z == endzoomrangetoslice {
                     targetrangetoslice = Some(starttargetrange..=endtargetrange);
                 }
+            // otherwise, the start zoom level should slice tiles from starttargetrange to end,
+            // the end zoom level should slice tiles from 0 to endtargetrange
             } else if z == startzoomrangetoslice {
                 if 1 << (z * 2) > 1 {
                     targetrangetoslice = Some(starttargetrange..=1 << (z * 2) - 1);
