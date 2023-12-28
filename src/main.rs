@@ -73,7 +73,7 @@ struct Args {
     #[arg(long, env, action)]
     save_resize: bool,
 
-    /// Index of the function in functions range.
+    /// Index of the function in functions range. Value should start from 1 and no more than totalfunction.
     #[arg(long, required(false), default_value("1"))]
     functionindex: u32,
 
