@@ -97,16 +97,17 @@ fn main() {
     std::fs::create_dir_all(&args.output_dir).unwrap();
 
     // calculate total number of tiles required in zoomrange
-    let totaltiles: u32 = zomr.clone().reduce(|acc, x| {
-        acc + 1 << (x * 2)
-    }).unwrap().into();
+    let mut totaltiles = 0;
+    zomr.clone().for_each(|x| {
+        totaltiles += 1 << (x * 2);
+    });
 
     // calculte how many tiles to slice
     let average = totaltiles / args.totalfunction;
     let tilessliced= average * (args.functionindex - 1);
-    let mut tilesslicedafter = average * args.functionindex;
+    let mut tilestoslice = average;
     if args.functionindex == args.totalfunction {
-        tilesslicedafter = totaltiles;
+        tilestoslice = totaltiles - tilessliced;
     }
 
     // calculate the zoomrange and targetrange for current function
@@ -114,30 +115,33 @@ fn main() {
     let mut endzoomrangetoslice: u8= *zomr.clone().end();
     let mut starttargetrange: Option<u32>  = None;
     let mut endtargetrange: Option<u32>  = None;
-    for i in 1..args.totalfunction {
+
+    (1..args.totalfunction).for_each(|_i| {
         let mut tilessum = 0;
         for j in zomr.clone() {
             let currentzoomtiles = 1 << (j * 2);
-            if tilessum + currentzoomtiles >= tilessliced {
+            if tilessum + currentzoomtiles > tilessliced {
                 startzoomrangetoslice = j;
-                starttargetrange = Some(tilessum + currentzoomtiles - tilessliced);
+                starttargetrange = Some(tilessliced - tilessum);
+                break;
             } else {
                 tilessum += currentzoomtiles;
             }
         }
-    }
-    for i in 1..args.totalfunction {
+    });
+    (1..args.totalfunction).for_each(|_i| {
         let mut tilessum = 0;
         for j in zomr.clone() {
             let currentzoomtiles = 1 << (j * 2);
-            if tilessum + currentzoomtiles >= tilesslicedafter {
+            if tilessum + currentzoomtiles >= tilessliced + tilestoslice {
                 endzoomrangetoslice = j;
-                endtargetrange = Some(tilessum + currentzoomtiles - tilesslicedafter);
+                endtargetrange = Some((tilessliced - tilessum) + tilestoslice - 1);
+                break;
             } else {
                 tilessum += currentzoomtiles;
             }
         }
-    }
+    });
 
     let config = Config {
         tilesize: args.tilesize,
@@ -165,7 +169,9 @@ fn main() {
         resized_images.for_each(|(img, z)| {
             let mut targetrangetoslice: Option<RangeInclusive<u32>> = None;
             if z == endzoomrangetoslice {
-                targetrangetoslice = Some((starttargetrange.unwrap()..=endtargetrange.unwrap()));
+                if starttargetrange.is_some() && endtargetrange.is_some() && endtargetrange.unwrap() > starttargetrange.unwrap() {
+                    targetrangetoslice = Some(starttargetrange.unwrap()..=endtargetrange.unwrap());
+                }
             }
             tile_image
                 .iter(&img, targetrangetoslice)
