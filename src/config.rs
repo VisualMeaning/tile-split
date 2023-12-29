@@ -88,3 +88,145 @@ impl<'a> Config<'a> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::Config;
+    use std::{ops::RangeInclusive, path::Path};
+
+    #[test]
+    // one function in total
+    fn full_zoom() {
+        let config = Config::new(
+            &Path::new("test.png"),
+            256,
+            5,
+            RangeInclusive::new(0, 5),
+            1,
+            1,
+        );
+        assert_eq!(config.startzoomrangetoslice, 0);
+        assert_eq!(config.starttargetrange, 0);
+        assert_eq!(config.endzoomrangetoslice, 5);
+        assert_eq!(config.endtargetrange, 1023);
+    }
+
+    #[test]
+    // the first function out of 4 functions
+    fn full_zoom_1() {
+        let config = Config::new(
+            &Path::new("test.png"),
+            256,
+            5,
+            RangeInclusive::new(0, 5),
+            1,
+            4,
+        );
+        assert_eq!(config.startzoomrangetoslice, 0);
+        assert_eq!(config.starttargetrange, 0);
+        assert_eq!(config.endzoomrangetoslice, 4);
+        assert_eq!(config.endtargetrange, 255);
+    }
+
+    #[test]
+    // the second function out of 4 functions
+    fn full_zoom_2() {
+        let config = Config::new(
+            &Path::new("test.png"),
+            256,
+            5,
+            RangeInclusive::new(0, 5),
+            2,
+            4,
+        );
+        assert_eq!(config.startzoomrangetoslice, 5);
+        assert_eq!(config.starttargetrange, 0);
+        assert_eq!(config.endzoomrangetoslice, 5);
+        assert_eq!(config.endtargetrange, 340);
+    }
+
+    #[test]
+    // the third function out of 4 functions
+    fn full_zoom_3() {
+        let config = Config::new(
+            &Path::new("test.png"),
+            256,
+            5,
+            RangeInclusive::new(0, 5),
+            3,
+            4,
+        );
+        assert_eq!(config.startzoomrangetoslice, 5);
+        assert_eq!(config.starttargetrange, 341);
+        assert_eq!(config.endzoomrangetoslice, 5);
+        assert_eq!(config.endtargetrange, 681);
+    }
+
+    #[test]
+    // the fourth function out of 4 functions
+    fn full_zoom_4() {
+        let config = Config::new(
+            &Path::new("test.png"),
+            256,
+            5,
+            RangeInclusive::new(0, 5),
+            4,
+            4,
+        );
+        assert_eq!(config.startzoomrangetoslice, 5);
+        assert_eq!(config.starttargetrange, 682);
+        assert_eq!(config.endzoomrangetoslice, 5);
+        assert_eq!(config.endtargetrange, 1023);
+    }
+
+    #[test]
+    // the first function out of 3 functions
+    fn half_zoom_1() {
+        let config = Config::new(
+            &Path::new("test.png"),
+            256,
+            5,
+            RangeInclusive::new(3, 5),
+            1,
+            3,
+        );
+        assert_eq!(config.startzoomrangetoslice, 3);
+        assert_eq!(config.starttargetrange, 0);
+        assert_eq!(config.endzoomrangetoslice, 5);
+        assert_eq!(config.endtargetrange, 127);
+    }
+
+    #[test]
+    // the second function out of 3 functions
+    fn half_zoom_2() {
+        let config = Config::new(
+            &Path::new("test.png"),
+            256,
+            5,
+            RangeInclusive::new(3, 5),
+            2,
+            3,
+        );
+        assert_eq!(config.startzoomrangetoslice, 5);
+        assert_eq!(config.starttargetrange, 128);
+        assert_eq!(config.endzoomrangetoslice, 5);
+        assert_eq!(config.endtargetrange, 575);
+    }
+
+    #[test]
+    // the third function out of 3 functions
+    fn half_zoom_3() {
+        let config = Config::new(
+            &Path::new("test.png"),
+            256,
+            5,
+            RangeInclusive::new(3, 5),
+            3,
+            3,
+        );
+        assert_eq!(config.startzoomrangetoslice, 5);
+        assert_eq!(config.starttargetrange, 576);
+        assert_eq!(config.endzoomrangetoslice, 5);
+        assert_eq!(config.endtargetrange, 1023);
+    }
+}
