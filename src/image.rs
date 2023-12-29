@@ -24,7 +24,11 @@ impl<'c> TileImage<'c> {
         Ok(img)
     }
 
-    pub fn iter<'d>(&self, img: &'d DynamicImage, targetrangetoslice: Option<RangeInclusive<u32>>) -> TilesIterator<'d> {
+    pub fn iter<'d>(
+        &self,
+        img: &'d DynamicImage,
+        targetrangetoslice: Option<RangeInclusive<u32>>,
+    ) -> TilesIterator<'d> {
         let width_in_tiles = img.width() / self.config.tilesize;
         let height_in_tiles = img.height() / self.config.tilesize;
         let morton_idx_max = width_in_tiles * height_in_tiles;

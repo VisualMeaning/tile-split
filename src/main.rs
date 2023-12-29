@@ -103,7 +103,7 @@ fn main() {
     });
     let average = totaltiles / args.totalfunction;
     // number of tiles sliced by previous functions
-    let tilessliced= average * (args.functionindex - 1);
+    let tilessliced = average * (args.functionindex - 1);
     // number of tiles to slice in this function, if it's the last
     // function, it should slice all the remaining tiles
     let mut tilestoslice = average;
@@ -116,9 +116,9 @@ fn main() {
     // tile index to start
     let mut starttargetrange: u32 = 0;
     // zoom level to stop
-    let mut endzoomrangetoslice: u8= *zomr.clone().end();
+    let mut endzoomrangetoslice: u8 = *zomr.clone().end();
     // tile index to stop
-    let mut endtargetrange: u32  = 0;
+    let mut endtargetrange: u32 = 0;
 
     // total of tiles in previous zoom levels
     let mut tilessum = 0;
@@ -133,7 +133,7 @@ fn main() {
         } else {
             tilessum += currentzoomtiles;
         }
-    };
+    }
     tilessum = 0;
     // calculte endzoomrangetoslice and endtargetrange
     for i in zomr.clone() {
@@ -146,7 +146,7 @@ fn main() {
         } else {
             tilessum += currentzoomtiles;
         }
-    };
+    }
 
     let config = Config {
         tilesize: args.tilesize,
@@ -173,7 +173,7 @@ fn main() {
         // save each sliced image
         resized_images.for_each(|(img, z)| {
             let mut targetrangetoslice: Option<RangeInclusive<u32>> = None;
-            // if startzoomrangetoslice is the same as endzoomrangetoslice, 
+            // if startzoomrangetoslice is the same as endzoomrangetoslice,
             // then tiles to be sliced in this function are from same zoom level
             if startzoomrangetoslice == endzoomrangetoslice {
                 if z == endzoomrangetoslice {
@@ -184,7 +184,7 @@ fn main() {
             } else if z == startzoomrangetoslice {
                 if 1 << (z * 2) > 1 {
                     targetrangetoslice = Some(starttargetrange..=(1 << (z * 2)) - 1);
-                }               
+                }
             } else if z == endzoomrangetoslice {
                 targetrangetoslice = Some(0..=endtargetrange);
             }
