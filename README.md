@@ -51,7 +51,7 @@ Arguments:
 Options:
   -l, --zoomlevel <ZOOMLEVEL>     Zoomlevel of input PNG file [env: ZOOMLEVEL=]
   -r, --zoomrange <ZOOMRANGE>...  Zoomrange to slice tiles for
-  -t, --targetrange Targetrange to slice subset of tiles. Optional.
+  -t, --targetrange               Targetrange to slice subset of tiles. Optional.
   -o, --output-dir <OUTPUT_DIR>   Location to write output tiles to [env: OUTPUT_DIR=] [default: out]
   -s, --tilesize <TILESIZE>       Dimension of output tiles, in pixels [default: 256]
   -f, --tileformat <TILEFORMAT>   Type of output tiles, currently unused [env: TILEFORMAT=] [default: png]
