@@ -95,7 +95,7 @@ mod tests {
     use std::{ops::RangeInclusive, path::Path};
 
     #[test]
-    // one function in total
+    // slice all tiles
     fn full_zoom() {
         let config = Config::new(
             &Path::new("test.png"),
@@ -111,7 +111,7 @@ mod tests {
     }
 
     #[test]
-    // the first function out of 4 functions
+    // slice the first 341 tiles out of all tiles
     fn full_zoom_1() {
         let config = Config::new(
             &Path::new("test.png"),
@@ -127,7 +127,7 @@ mod tests {
     }
 
     #[test]
-    // the second function out of 4 functions
+    // slice the second 341 tiles out of all tiles
     fn full_zoom_2() {
         let config = Config::new(
             &Path::new("test.png"),
@@ -143,7 +143,7 @@ mod tests {
     }
 
     #[test]
-    // the third function out of 4 functions
+    // slice the third 341 tiles out of all tiles
     fn full_zoom_3() {
         let config = Config::new(
             &Path::new("test.png"),
@@ -159,7 +159,7 @@ mod tests {
     }
 
     #[test]
-    // the fourth function out of 4 functions
+    // slice the remaining tiles out of all tiles
     fn full_zoom_4() {
         let config = Config::new(
             &Path::new("test.png"),
@@ -175,7 +175,7 @@ mod tests {
     }
 
     #[test]
-    // the first function out of 3 functions
+    // slice the first 448 tiles out of all tiles
     fn half_zoom_1() {
         let config = Config::new(
             &Path::new("test.png"),
@@ -191,7 +191,7 @@ mod tests {
     }
 
     #[test]
-    // the second function out of 3 functions
+    // slice the second 448 tiles out of all tiles
     fn half_zoom_2() {
         let config = Config::new(
             &Path::new("test.png"),
@@ -207,7 +207,7 @@ mod tests {
     }
 
     #[test]
-    // the third function out of 3 functions
+    // slice the remaining tiles out of all tiles
     fn half_zoom_3() {
         let config = Config::new(
             &Path::new("test.png"),
