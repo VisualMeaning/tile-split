@@ -66,17 +66,13 @@ struct Args {
     #[arg(long, env, required(false), default_value("png"))]
     tileformat: String,
 
+    /// Subset morton range of tiles to slice.
+    #[arg(short='t', long, required(false), value_parser = parse_range::<u32>)]
+    targetrange: Option<RangeInclusive<u32>>,
+
     /// Save the resized files
     #[arg(long, env, action)]
     save_resize: bool,
-
-    /// Index of the function in functions range. Value should start from 1 and no more than totalfunction.
-    #[arg(long, required(false), default_value("1"))]
-    functionindex: u32,
-
-    /// Number of functions in total.
-    #[arg(long, required(false), default_value("1"))]
-    totalfunction: u32,
 }
 
 fn main() {
@@ -92,8 +88,7 @@ fn main() {
         args.tilesize,
         args.zoomlevel,
         args.zoomrange,
-        args.functionindex,
-        args.totalfunction,
+        args.targetrange,
     );
 
     // instantiate TileImage
