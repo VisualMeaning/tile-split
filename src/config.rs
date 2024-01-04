@@ -39,6 +39,9 @@ impl<'a> Config<'a> {
             Some(targetrange) => *targetrange.end() - tilessliced,
             None => totaltiles,
         };
+        if tilestoslice > totaltiles {
+            panic!("Target range value cannot be over than the total number of tiles within zoom range.");
+        }
 
         // zoom level to start
         let mut startzoomrangetoslice: u8 = *zomr.clone().start();

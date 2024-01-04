@@ -1,3 +1,5 @@
+use std::ops::RangeInclusive;
+
 use crate::Config;
 use image::imageops;
 use image::DynamicImage;
@@ -39,7 +41,7 @@ impl<'iter> Resizer<'iter, DynamicImage> for Config<'_> {
         _check_dimension(self, img);
 
         Box::new(
-            (self.startzoomrangetoslice..self.endzoomrangetoslice).map(|x| {
+            RangeInclusive::new(self.startzoomrangetoslice, self.endzoomrangetoslice).map(|x| {
                 let t_size = self.tilesize << x;
                 (_resize(img, t_size, t_size), x)
             }),
