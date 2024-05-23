@@ -10,3 +10,4 @@ image = "^0.24.7"
 clap = { version = "^4", features = ["env", "derive"] }
 oxipng = { version="^9.0", features=["parallel", "zopfli", "filetime"], default-features=false }
 zorder = "0.1.0"
+rayon = "1.10.0"

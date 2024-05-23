@@ -2,6 +2,7 @@ use clap::Parser;
 use image::{DynamicImage, ImageResult, SubImage};
 use std::fs::File;
 use std::io::Write;
+use rayon::prelude::*;
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::{ops::RangeInclusive, path::Path};
@@ -9,8 +10,8 @@ use tile_split::{Config, Error, Resizer, TileImage};
 
 fn save_subimage(
     sub: &SubImage<&DynamicImage>,
-    x: u32,
-    y: u32,
+    x: &u32,
+    y: &u32,
     z: u8,
     folder: &Path,
     config: &Config,
@@ -129,7 +130,8 @@ fn main() {
                 targetrangetoslice = Some(0..=config.endtargetrange);
             }
             tile_image
-                .iter(&img, targetrangetoslice)
+                .iter(&img, targetrangetoslice).collect::<Vec<(SubImage<&DynamicImage>, u32, u32)>>()
+                .par_iter()
                 .for_each(|(sub_img, x, y)| {
                     save_subimage(&sub_img, x, y, z, &args.output_dir, &config).unwrap()
                 });
