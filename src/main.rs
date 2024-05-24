@@ -1,5 +1,5 @@
 use clap::Parser;
-use image::{DynamicImage, ImageResult, SubImage};
+use image::{imageops, DynamicImage, ImageResult, SubImage};
 use std::fs::File;
 use std::io::Write;
 use rayon::prelude::*;
@@ -105,7 +105,14 @@ fn main() {
     let image = &tile_image.open_img().unwrap();
 
     // resize (and save)
-    let resized_images = config.resize_range(image);
+    let resized_images = 
+        RangeInclusive::new(config.startzoomrangetoslice, config.endzoomrangetoslice)
+        .into_par_iter()
+        .map(|x: u8| {
+                let t_size = config.tilesize << x;
+                (image.resize(t_size, t_size, imageops::FilterType::Lanczos3), x)
+            }
+        );
 
     if save_resized {
         resized_images
