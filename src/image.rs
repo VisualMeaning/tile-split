@@ -57,7 +57,7 @@ pub struct TilesIterator<'d> {
 }
 
 impl<'d> Iterator for TilesIterator<'d> {
-    type Item = (SubImage<&'d DynamicImage>, u32, u32);
+    type Item = (u32, u32);
     fn next(&mut self) -> Option<Self::Item> {
         // Reaching the end of slicing, return None
         let coord = coord_of(self.morton_idx);
@@ -70,7 +70,8 @@ impl<'d> Iterator for TilesIterator<'d> {
                 let x1 = x * self.tilesize;
                 let y1 = y * self.tilesize;
                 // Slice image
-                let result = (self.img.view(x1, y1, self.tilesize, self.tilesize), x, y);
+                // let result = (self.img.view(x1, y1, self.tilesize, self.tilesize), x, y);
+                let result = (x, y);
                 self.morton_idx += 1;
                 Some(result)
             }
