@@ -130,7 +130,7 @@ fn main() {
                 targetrangetoslice = Some(0..=config.endtargetrange);
             }
             tile_image
-                .iter(&img, targetrangetoslice).collect::<Vec<(u32, u32)>>()
+                .iter(&img, targetrangetoslice).collect::<Vec<(SubImage<&DynamicImage>, u32, u32)>>()
                 .par_iter()
                 .for_each(|(sub_img, x, y)| {
                     save_subimage(&sub_img, x, y, z, &args.output_dir, &config).unwrap()
