@@ -112,33 +112,30 @@ fn main() {
             .for_each(|(img, z)| save_image(&img, z, &args.output_dir, &args.tileformat).unwrap())
     } else {
         // save each sliced image
-        resized_images
-            .collect::<Vec<(DynamicImage, u8)>>()
-            .par_iter()
-            .for_each(|(img, z)| {
-                let mut targetrangetoslice: Option<RangeInclusive<u32>> = None;
-                // if startzoomrangetoslice is the same as endzoomrangetoslice,
-                // then tiles to be sliced in this function are from same zoom level
-                if config.startzoomrangetoslice == config.endzoomrangetoslice {
-                    if *z == config.endzoomrangetoslice {
-                        targetrangetoslice = Some(config.starttargetrange..=config.endtargetrange);
-                    }
-                // otherwise, the start zoom level should slice tiles from starttargetrange to end,
-                // the end zoom level should slice tiles from 0 to endtargetrange
-                } else if *z == config.startzoomrangetoslice {
-                    if 1 << (z * 2) > 1 {
-                        targetrangetoslice = Some(config.starttargetrange..=(1 << (z * 2)) - 1);
-                    }
-                } else if *z == config.endzoomrangetoslice {
-                    targetrangetoslice = Some(0..=config.endtargetrange);
+        resized_images.for_each(|(img, z)| {
+            let mut targetrangetoslice: Option<RangeInclusive<u32>> = None;
+            // if startzoomrangetoslice is the same as endzoomrangetoslice,
+            // then tiles to be sliced in this function are from same zoom level
+            if config.startzoomrangetoslice == config.endzoomrangetoslice {
+                if z == config.endzoomrangetoslice {
+                    targetrangetoslice = Some(config.starttargetrange..=config.endtargetrange);
                 }
-                tile_image
-                    .iter(&img, targetrangetoslice).collect::<Vec<(SubImage<&DynamicImage>, u32, u32)>>()
-                    .par_iter()
-                    .for_each(|(sub_img, x, y)| {
-                        save_subimage(&sub_img, x, y, *z, &args.output_dir, &config).unwrap()
-                    });
-            });
+            // otherwise, the start zoom level should slice tiles from starttargetrange to end,
+            // the end zoom level should slice tiles from 0 to endtargetrange
+            } else if z == config.startzoomrangetoslice {
+                if 1 << (z * 2) > 1 {
+                    targetrangetoslice = Some(config.starttargetrange..=(1 << (z * 2)) - 1);
+                }
+            } else if z == config.endzoomrangetoslice {
+                targetrangetoslice = Some(0..=config.endtargetrange);
+            }
+            tile_image
+                .iter(&img, targetrangetoslice).collect::<Vec<(SubImage<&DynamicImage>, u32, u32)>>()
+                .par_iter()
+                .for_each(|(sub_img, x, y)| {
+                    save_subimage(&sub_img, x, y, z, &args.output_dir, &config).unwrap()
+                });
+        });
     }
 }
 
