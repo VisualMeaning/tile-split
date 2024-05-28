@@ -1,12 +1,12 @@
 use clap::Parser;
-use image::{imageops, DynamicImage, ImageResult, SubImage};
+use image::{DynamicImage, ImageResult, SubImage};
 use std::fs::File;
 use std::io::Write;
 use rayon::prelude::*;
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::{ops::RangeInclusive, path::Path};
-use tile_split::{Config, Error, Resizer, TileImage};
+use tile_split::{Config, Error, TileImage};
 
 fn save_subimage(
     sub: &SubImage<&DynamicImage>,
@@ -110,7 +110,7 @@ fn main() {
         .into_par_iter()
         .map(|x: u8| {
                 let t_size = config.tilesize << x;
-                (image.resize(t_size, t_size, imageops::FilterType::Lanczos3), x)
+                (tile_image.resize(&image, t_size, t_size), x)
             }
         );
 
