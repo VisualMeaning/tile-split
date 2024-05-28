@@ -3,10 +3,10 @@ use std::ops::RangeInclusive;
 use crate::Config;
 use image::imageops;
 use image::DynamicImage;
+use rayon::prelude::*;
 
 pub trait Resizer<'iter, T> {
-    type ItemIterator: Iterator<Item = (T, u8)>;
-
+    type ItemIterator;
     fn resize_range(&'iter self, img: &'iter T) -> Self::ItemIterator;
 }
 
@@ -35,16 +35,18 @@ fn _resize(img: &DynamicImage, width: u32, height: u32) -> DynamicImage {
 }
 
 impl<'iter> Resizer<'iter, DynamicImage> for Config<'_> {
-    type ItemIterator = Box<dyn Iterator<Item = ResizedItem> + 'iter>;
+    type ItemIterator = rayon::iter::Map<rayon::range_inclusive::Iter<u8>, _>;
 
     fn resize_range(&'iter self, img: &'iter DynamicImage) -> Self::ItemIterator {
         _check_dimension(self, img);
 
-        Box::new(
-            RangeInclusive::new(self.startzoomrangetoslice, self.endzoomrangetoslice).map(|x| {
-                let t_size = self.tilesize << x;
-                (_resize(img, t_size, t_size), x)
-            }),
-        )
+        fn _test<'iter>(state: (& DynamicImage, u32), x: u8) -> ResizedItem {
+            let t_size: u32 = state.1 << x;
+            (_resize(state.0, t_size, t_size), x)
+        }
+
+        RangeInclusive::new(self.startzoomrangetoslice, self.endzoomrangetoslice)
+        .into_par_iter()
+        .map_init(|| (img, self.tilesize), _test as fn((& DynamicImage, u32), u8) -> ResizedItem )
     }
 }
