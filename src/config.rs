@@ -94,6 +94,22 @@ mod tests {
     use std::{ops::RangeInclusive, path::Path};
 
     #[test]
+    // build config with only required args
+    fn minimum_args() {
+        let config = Config::new(
+            &Path::new("test.png"),
+            256,
+            5,
+            None,
+            None,
+        );
+        assert_eq!(config.startzoomrangetoslice, 5);
+        assert_eq!(config.starttargetrange, 0);
+        assert_eq!(config.endzoomrangetoslice, 5);
+        assert_eq!(config.endtargetrange, 1023);
+    }
+
+    #[test]
     // slice all tiles
     fn full_zoom() {
         let config = Config::new(
