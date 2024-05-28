@@ -100,9 +100,8 @@ fn main() {
         args.targetrange,
     );
 
-    // instantiate TileImage
-    let tile_image = TileImage { config: &config };
-    let image = &tile_image.open_img().unwrap();
+    // instantiate and load image
+    let image = TileImage::new(&config);
 
     // resize (and save)
     let resized_images = 
@@ -110,7 +109,7 @@ fn main() {
         .into_par_iter()
         .map(|x: u8| {
                 let t_size = config.tilesize << x;
-                (tile_image.resize(&image, t_size, t_size), x)
+                (image.resize(t_size, t_size), x)
             }
         );
 
@@ -136,7 +135,7 @@ fn main() {
             } else if z == config.endzoomrangetoslice {
                 targetrangetoslice = Some(0..=config.endtargetrange);
             }
-            tile_image
+            image
                 .iter(&img, targetrangetoslice).collect::<Vec<(SubImage<&DynamicImage>, u32, u32)>>()
                 .par_iter()
                 .for_each(|(sub_img, x, y)| {

@@ -1,4 +1,4 @@
-use crate::{Config, Error};
+use crate::Config;
 use image::{imageops, GenericImageView};
 use image::{io::Reader as ImageReader, DynamicImage, SubImage};
 use std::ops::RangeInclusive;
@@ -6,22 +6,30 @@ use zorder::coord_of;
 
 pub struct TileImage<'c> {
     pub config: &'c Config<'c>,
+    pub img: DynamicImage,
 }
 
 impl<'c> TileImage<'c> {
-    pub fn open_img(&self) -> Result<DynamicImage, Error> {
-        let mut reader = ImageReader::open(self.config.filename)?;
+    pub fn new(config: &'c Config) -> Self {
+        let mut reader = match ImageReader::open(config.filename) {
+            Ok(reader) => reader,
+            Err(e) => panic!("Problem opening the image: {:?}", e),
+        };
         // Default memory limit of 512MB is too small for level 6+ PNGs
         reader.no_limits();
 
-        let img = reader.decode()?;
+        let img = match reader.decode() {
+            Ok(img) => img,
+            Err(e) => panic!("Problem decoding the image: {:?}", e),
+        };
 
-        // TODO: Refactor the image load to be done separately,
-        // so the check and error can happen in a function that receives config and an already loaded image
         if img.width() != img.height() {
-            return Err("Image is not square.".into());
+            panic!("Image is not square!")
         }
-        Ok(img)
+        TileImage {
+            config,
+            img,
+        }
     }
 
     pub fn iter<'d>(
@@ -47,27 +55,27 @@ impl<'c> TileImage<'c> {
         }
     }
 
-    fn _check_dimension(config: &Config, img: &DynamicImage) {
-        if config.endzoomrangetoslice > config.zoomlevel {
+    fn _check_dimension(&self) {
+        if self.config.endzoomrangetoslice > self.config.zoomlevel {
             panic!("Zoom range has value(s) larger than zoom level.");
         }
-        let (img_width, img_height) = (img.width(), img.height());
-        let max_dimension_size = config.tilesize << config.zoomlevel;
+        let (img_width, img_height) = (self.img.width(), self.img.height());
+        let max_dimension_size = self.config.tilesize << self.config.zoomlevel;
         if img_width != max_dimension_size || img_height != max_dimension_size {
             panic!(
                 "Image of size {w}x{h} cannot be split into
                 tiles of size {tile_size} and max zoom level {max_zoom}.",
                 w = img_width,
                 h = img_height,
-                tile_size = config.tilesize,
-                max_zoom = config.zoomlevel,
+                tile_size = self.config.tilesize,
+                max_zoom = self.config.zoomlevel,
             );
         }
     }
     
-    pub fn resize(&self, img: &DynamicImage, width: u32, height: u32) -> DynamicImage {
-        Self::_check_dimension(self.config, img);
-        img.resize(width, height, imageops::FilterType::Lanczos3)
+    pub fn resize(&self, width: u32, height: u32) -> DynamicImage {
+        self._check_dimension();
+        self.img.resize(width, height, imageops::FilterType::Lanczos3)
     }
 }
 
