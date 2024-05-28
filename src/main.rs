@@ -52,7 +52,7 @@ struct Args {
 
     /// Zoomrange to slice tiles for.
     #[arg(short='r', long, required(false), value_parser = parse_range::<u8>)]
-    zoomrange: RangeInclusive<u8>,
+    zoomrange: Option<RangeInclusive<u8>>,
 
     /// Location to write output tiles to.
     #[arg(short, long, env, required(false), default_value("out"))]

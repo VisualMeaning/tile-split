@@ -16,14 +16,10 @@ impl<'a> Config<'a> {
         filename: &'a Path,                       // $1
         tilesize: u32,                            // 256
         zoomlevel: u8,                            // eg 5
-        zoomrange: RangeInclusive<u8>,            // eg 0 - 5
+        zoomrange: Option<RangeInclusive<u8>>,    // eg 0 - 5
         targetrange: Option<RangeInclusive<u32>>, //eg 0 - 500
     ) -> Self {
-        let zomr = if zoomrange.is_empty() {
-            zoomlevel..=zoomlevel
-        } else {
-            zoomrange
-        };
+        let zomr = zoomrange.unwrap_or(zoomlevel..=zoomlevel);
         // total number of tiles required in zoomrange
         let mut totaltiles = 0;
         zomr.clone().for_each(|x| {
@@ -104,7 +100,7 @@ mod tests {
             &Path::new("test.png"),
             256,
             5,
-            RangeInclusive::new(0, 5),
+            Some(RangeInclusive::new(0, 5)),
             None,
         );
         assert_eq!(config.startzoomrangetoslice, 0);
@@ -120,7 +116,7 @@ mod tests {
             &Path::new("test.png"),
             256,
             5,
-            RangeInclusive::new(0, 5),
+            Some(RangeInclusive::new(0, 5)),
             Some(RangeInclusive::new(0, 341)),
         );
         assert_eq!(config.startzoomrangetoslice, 0);
@@ -136,7 +132,7 @@ mod tests {
             &Path::new("test.png"),
             256,
             5,
-            RangeInclusive::new(0, 5),
+            Some(RangeInclusive::new(0, 5)),
             Some(RangeInclusive::new(341, 682)),
         );
         assert_eq!(config.startzoomrangetoslice, 5);
@@ -152,7 +148,7 @@ mod tests {
             &Path::new("test.png"),
             256,
             5,
-            RangeInclusive::new(0, 5),
+            Some(RangeInclusive::new(0, 5)),
             Some(RangeInclusive::new(682, 1023)),
         );
         assert_eq!(config.startzoomrangetoslice, 5);
@@ -168,7 +164,7 @@ mod tests {
             &Path::new("test.png"),
             256,
             5,
-            RangeInclusive::new(0, 5),
+            Some(RangeInclusive::new(0, 5)),
             Some(RangeInclusive::new(1023, 1365)),
         );
         assert_eq!(config.startzoomrangetoslice, 5);
@@ -184,7 +180,7 @@ mod tests {
             &Path::new("test.png"),
             256,
             5,
-            RangeInclusive::new(3, 5),
+            Some(RangeInclusive::new(3, 5)),
             Some(RangeInclusive::new(0, 448)),
         );
         assert_eq!(config.startzoomrangetoslice, 3);
@@ -200,7 +196,7 @@ mod tests {
             &Path::new("test.png"),
             256,
             5,
-            RangeInclusive::new(3, 5),
+            Some(RangeInclusive::new(3, 5)),
             Some(RangeInclusive::new(448, 896)),
         );
         assert_eq!(config.startzoomrangetoslice, 5);
@@ -216,7 +212,7 @@ mod tests {
             &Path::new("test.png"),
             256,
             5,
-            RangeInclusive::new(3, 5),
+            Some(RangeInclusive::new(3, 5)),
             Some(RangeInclusive::new(896, 1344)),
         );
         assert_eq!(config.startzoomrangetoslice, 5);
