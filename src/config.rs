@@ -96,13 +96,7 @@ mod tests {
     #[test]
     // build config with only required args
     fn minimum_args() {
-        let config = Config::new(
-            &Path::new("test.png"),
-            256,
-            5,
-            None,
-            None,
-        );
+        let config = Config::new(&Path::new("test.png"), 256, 5, None, None);
         assert_eq!(config.startzoomrangetoslice, 5);
         assert_eq!(config.starttargetrange, 0);
         assert_eq!(config.endzoomrangetoslice, 5);
