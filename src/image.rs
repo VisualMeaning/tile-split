@@ -26,10 +26,7 @@ impl<'c> TileImage<'c> {
         if img.width() != img.height() {
             panic!("Image is not square!")
         }
-        TileImage {
-            config,
-            img,
-        }
+        TileImage { config, img }
     }
 
     pub fn iter<'d>(
@@ -72,10 +69,11 @@ impl<'c> TileImage<'c> {
             );
         }
     }
-    
+
     pub fn resize(&self, width: u32, height: u32) -> DynamicImage {
         self._check_dimension();
-        self.img.resize(width, height, imageops::FilterType::Lanczos3)
+        self.img
+            .resize(width, height, imageops::FilterType::Lanczos3)
     }
 }
 

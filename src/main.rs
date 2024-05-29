@@ -1,8 +1,8 @@
 use clap::Parser;
 use image::{DynamicImage, ImageResult, SubImage};
+use rayon::prelude::*;
 use std::fs::File;
 use std::io::Write;
-use rayon::prelude::*;
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::{ops::RangeInclusive, path::Path};
@@ -104,14 +104,13 @@ fn main() {
     let image = TileImage::new(&config);
 
     // resize (and save)
-    let resized_images = 
+    let resized_images =
         RangeInclusive::new(config.startzoomrangetoslice, config.endzoomrangetoslice)
-        .into_par_iter()
-        .map(|x: u8| {
+            .into_par_iter()
+            .map(|x: u8| {
                 let t_size = config.tilesize << x;
                 (image.resize(t_size, t_size), x)
-            }
-        );
+            });
 
     if save_resized {
         resized_images
@@ -136,7 +135,8 @@ fn main() {
                 targetrangetoslice = Some(0..=config.endtargetrange);
             }
             image
-                .iter(&img, targetrangetoslice).collect::<Vec<(SubImage<&DynamicImage>, u32, u32)>>()
+                .iter(&img, targetrangetoslice)
+                .collect::<Vec<(SubImage<&DynamicImage>, u32, u32)>>()
                 .par_iter()
                 .for_each(|(sub_img, x, y)| {
                     save_subimage(&sub_img, x, y, z, &args.output_dir, &config).unwrap()
