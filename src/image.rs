@@ -53,6 +53,8 @@ impl<'c> TileImage<'c> {
     }
 
     fn _check_dimension(&self) {
+        // TODO: work with any dimension (albeit square image),
+        // resize to proper zoom size then split into tiles of config.tilesize side.
         if self.config.endzoomrangetoslice > self.config.zoomlevel {
             panic!("Zoom range has value(s) larger than zoom level.");
         }
