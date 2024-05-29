@@ -29,7 +29,7 @@ impl<'c> TileImage<'c> {
         TileImage { config, img }
     }
 
-    pub fn iter<'d>(
+    pub fn iter_tiles<'d>(
         &self,
         img: &'d DynamicImage,
         targetrangetoslice: Option<RangeInclusive<u32>>,

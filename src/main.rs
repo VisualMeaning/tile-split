@@ -135,7 +135,7 @@ fn main() {
                 targetrangetoslice = Some(0..=config.endtargetrange);
             }
             image
-                .iter(&img, targetrangetoslice)
+                .iter_tiles(&img, targetrangetoslice)
                 .collect::<Vec<(SubImage<&DynamicImage>, u32, u32)>>()
                 .par_iter()
                 .for_each(|(sub_img, x, y)| {
