@@ -10,19 +10,25 @@ pub struct TileImage<'c> {
 }
 
 impl<'c> TileImage<'c> {
-    pub fn new(config: &'c Config) -> Self {
-        let mut reader = match ImageReader::open(config.filename) {
-            Ok(reader) => reader,
-            Err(e) => panic!("Problem opening the image: {:?}", e),
+    pub fn new(config: &'c Config, provided_image: Option<&'c DynamicImage>) -> Self {
+        let img = match provided_image {
+            // Use provided image if it exits
+            Some(provided_image) => provided_image.clone(),
+            // Load from config file path
+            None => {
+                let mut reader = match ImageReader::open(config.filename) {
+                    Ok(reader) => reader,
+                    Err(e) => panic!("Problem opening the image: {:?}", e),
+                };
+                // Default memory limit of 512MB is too small for level 6+ PNGs
+                reader.no_limits();
+        
+                match reader.decode() {
+                    Ok(reader_image) => reader_image,
+                    Err(e) => panic!("Problem decoding the image: {:?}", e),
+                }
+            }
         };
-        // Default memory limit of 512MB is too small for level 6+ PNGs
-        reader.no_limits();
-
-        let img = match reader.decode() {
-            Ok(img) => img,
-            Err(e) => panic!("Problem decoding the image: {:?}", e),
-        };
-
         if img.width() != img.height() {
             panic!("Image is not square!")
         }

@@ -132,7 +132,7 @@ fn main() {
     );
 
     // instantiate and load image
-    let image = TileImage::new(&config);
+    let image = TileImage::new(&config, None);
 
     // resize (and save)
     let resized_images =
