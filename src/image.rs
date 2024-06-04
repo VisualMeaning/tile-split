@@ -1,7 +1,8 @@
 use crate::Config;
 use image::{imageops, GenericImageView};
-use image::{io::Reader as ImageReader, DynamicImage, SubImage};
+use image::{io::Reader as ImageReader, DynamicImage, ImageResult, SubImage};
 use std::ops::RangeInclusive;
+use std::path::Path;
 use zorder::coord_of;
 
 pub struct TileImage<'c> {
@@ -22,7 +23,7 @@ impl<'c> TileImage<'c> {
                 };
                 // Default memory limit of 512MB is too small for level 6+ PNGs
                 reader.no_limits();
-        
+
                 match reader.decode() {
                     Ok(reader_image) => reader_image,
                     Err(e) => panic!("Problem decoding the image: {:?}", e),
@@ -35,14 +36,28 @@ impl<'c> TileImage<'c> {
         TileImage { config, img }
     }
 
-    pub fn iter_tiles<'d>(
-        &self,
-        img: &'d DynamicImage,
-        targetrangetoslice: Option<RangeInclusive<u32>>,
-    ) -> TilesIterator<'d> {
-        let width_in_tiles = img.width() / self.config.tilesize;
-        let height_in_tiles = img.height() / self.config.tilesize;
+    pub fn iter_tiles(&self, index: u8) -> TilesIterator<'_> {
+        let width_in_tiles = self.img.width() / self.config.tilesize;
+        let height_in_tiles = self.img.height() / self.config.tilesize;
         let morton_idx_max = width_in_tiles * height_in_tiles;
+
+        let mut targetrangetoslice: Option<RangeInclusive<u32>> = None;
+        // if startzoomrangetoslice is the same as endzoomrangetoslice,
+        // then tiles to be sliced in this function are from same zoom level
+        if self.config.startzoomrangetoslice == self.config.endzoomrangetoslice {
+            if index == self.config.endzoomrangetoslice {
+                targetrangetoslice =
+                    Some(self.config.starttargetrange..=self.config.endtargetrange);
+            }
+        // otherwise, the start zoom level should slice tiles from starttargetrange to end,
+        // the end zoom level should slice tiles from 0 to endtargetrange
+        } else if index == self.config.startzoomrangetoslice {
+            if 1 << (index * 2) > 1 {
+                targetrangetoslice = Some(self.config.starttargetrange..=(1 << (index * 2)) - 1);
+            }
+        } else if index == self.config.endzoomrangetoslice {
+            targetrangetoslice = Some(0..=self.config.endtargetrange);
+        }
 
         let morton_idx = match &targetrangetoslice {
             Some(targetrange) => *targetrange.start(),
@@ -50,7 +65,7 @@ impl<'c> TileImage<'c> {
         };
 
         TilesIterator {
-            img,
+            img: &self.img,
             morton_idx,
             morton_idx_max,
             tilesize: self.config.tilesize,
@@ -78,10 +93,20 @@ impl<'c> TileImage<'c> {
         }
     }
 
-    pub fn resize(&self, width: u32, height: u32) -> DynamicImage {
+    pub fn resize(&self, width: u32, height: u32) -> TileImage {
         self._check_dimension();
+        let resized_image = self
+            .img
+            .resize(width, height, imageops::FilterType::Lanczos3);
+        TileImage {
+            config: self.config,
+            img: resized_image,
+        }
+    }
+
+    pub fn save_image(&self, z: u8, folder: &Path, tileformat: &str) -> ImageResult<()> {
         self.img
-            .resize(width, height, imageops::FilterType::Lanczos3)
+            .save(folder.join(format!("{z}.{fmt}", z = z, fmt = tileformat)))
     }
 }
 

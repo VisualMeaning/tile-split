@@ -1,5 +1,5 @@
 use clap::Parser;
-use image::{DynamicImage, ImageResult, SubImage};
+use image::{DynamicImage, SubImage};
 use rayon::prelude::*;
 use std::fs::File;
 use std::io::Write;
@@ -50,10 +50,6 @@ fn save_subimage(
     sub.to_image().save(path)?;
 
     Ok(())
-}
-
-fn save_image(img: &DynamicImage, z: u8, folder: &Path, tileformat: &str) -> ImageResult<()> {
-    img.save(folder.join(format!("{z}.{fmt}", z = z, fmt = tileformat)))
 }
 
 fn parse_range<T>(arg: &str) -> Result<RangeInclusive<T>, <T as FromStr>::Err>
@@ -144,29 +140,14 @@ fn main() {
             });
 
     if args.save_resize {
-        resized_images
-            .for_each(|(img, z)| save_image(&img, z, &args.output_dir, &args.tileformat).unwrap())
+        resized_images.for_each(|(img, z)| {
+            img.save_image(z, &args.output_dir, &args.tileformat)
+                .unwrap()
+        })
     } else {
         // save each sliced image
         resized_images.for_each(|(img, z)| {
-            let mut targetrangetoslice: Option<RangeInclusive<u32>> = None;
-            // if startzoomrangetoslice is the same as endzoomrangetoslice,
-            // then tiles to be sliced in this function are from same zoom level
-            if config.startzoomrangetoslice == config.endzoomrangetoslice {
-                if z == config.endzoomrangetoslice {
-                    targetrangetoslice = Some(config.starttargetrange..=config.endtargetrange);
-                }
-            // otherwise, the start zoom level should slice tiles from starttargetrange to end,
-            // the end zoom level should slice tiles from 0 to endtargetrange
-            } else if z == config.startzoomrangetoslice {
-                if 1 << (z * 2) > 1 {
-                    targetrangetoslice = Some(config.starttargetrange..=(1 << (z * 2)) - 1);
-                }
-            } else if z == config.endzoomrangetoslice {
-                targetrangetoslice = Some(0..=config.endtargetrange);
-            }
-            image
-                .iter_tiles(&img, targetrangetoslice)
+            img.iter_tiles(z)
                 .collect::<Vec<(SubImage<&DynamicImage>, u32, u32)>>()
                 .par_iter()
                 .for_each(|(sub_img, x, y)| {
