@@ -66,6 +66,7 @@ impl<'c> TileImage<'c> {
 
         TilesIterator {
             img: &self.img,
+            config: &self.config,
             morton_idx,
             morton_idx_max,
             tilesize: self.config.tilesize,
@@ -112,6 +113,7 @@ impl<'c> TileImage<'c> {
 
 pub struct TilesIterator<'d> {
     img: &'d DynamicImage,
+    config: &'d Config<'d>,
     morton_idx: u32,
     morton_idx_max: u32,
     tilesize: u32,
@@ -119,7 +121,7 @@ pub struct TilesIterator<'d> {
 }
 
 impl<'d> Iterator for TilesIterator<'d> {
-    type Item = (SubImage<&'d DynamicImage>, u32, u32);
+    type Item = Tile<'d>;
     fn next(&mut self) -> Option<Self::Item> {
         // Reaching the end of slicing, return None
         let coord = coord_of(self.morton_idx);
@@ -131,11 +133,37 @@ impl<'d> Iterator for TilesIterator<'d> {
             _ => {
                 let x1 = x * self.tilesize;
                 let y1 = y * self.tilesize;
-                // Slice image
-                let result = (self.img.view(x1, y1, self.tilesize, self.tilesize), x, y);
                 self.morton_idx += 1;
-                Some(result)
+                // Slice image
+                Some(Tile {
+                    config: self.config,
+                    img: self.img.view(x1, y1, self.tilesize, self.tilesize),
+                    x,
+                    y,
+                })
             }
         }
+    }
+}
+
+pub struct Tile<'c> {
+    pub config: &'c Config<'c>,
+    pub img: SubImage<&'c DynamicImage>,
+    pub x: u32,
+    pub y: u32,
+}
+
+impl<'c> Tile<'c> {
+    pub fn convert_to_oxipng(&self) -> Vec<u8> {
+        oxipng::RawImage::new(
+            self.config.tilesize,
+            self.config.tilesize,
+            oxipng::ColorType::RGBA,
+            oxipng::BitDepth::Eight,
+            self.img.to_image().into_raw(),
+        )
+        .unwrap()
+        .create_optimized_png(&oxipng::Options::from_preset(self.config.preset.unwrap()))
+        .unwrap()
     }
 }

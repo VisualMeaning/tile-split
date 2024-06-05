@@ -1,53 +1,21 @@
 use clap::Parser;
-use image::{DynamicImage, SubImage};
 use rayon::prelude::*;
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::{ops::RangeInclusive, path::Path};
-use tile_split::{Config, Error, TileImage};
+use tile_split::{Config, Error, Tile, TileImage};
 
-fn save_subimage_oxi(
-    sub: &SubImage<&DynamicImage>,
-    x: &u32,
-    y: &u32,
-    z: u8,
-    folder: &Path,
-    config: &Config,
-    preset: u8,
-) -> Result<(), Error> {
-    let path = folder.join(format!("{z}-{x}-{y}.png", z = z, x = x, y = y));
-    let png = oxipng::RawImage::new(
-        config.tilesize,
-        config.tilesize,
-        oxipng::ColorType::RGBA,
-        oxipng::BitDepth::Eight,
-        sub.to_image().into_raw(),
-    )?
-    .create_optimized_png(&oxipng::Options::from_preset(preset))?;
-    let mut file = File::create(path)?;
-    file.write_all(&png)?;
-
-    Ok(())
-}
-
-fn save_subimage(
-    sub: &SubImage<&DynamicImage>,
-    x: &u32,
-    y: &u32,
-    z: u8,
-    folder: &Path,
-    format: &str,
-) -> Result<(), Error> {
+fn save_tile(tile: &Tile, z: u8, folder: &Path, format: &str) -> Result<(), Error> {
     let path = folder.join(format!(
         "{z}-{x}-{y}.{fmt}",
         z = z,
-        x = x,
-        y = y,
+        x = tile.x,
+        y = tile.y,
         fmt = format
     ));
-    sub.to_image().save(path)?;
+    tile.img.to_image().save(path)?;
 
     Ok(())
 }
@@ -125,6 +93,7 @@ fn main() {
         args.zoomlevel,
         args.zoomrange,
         args.targetrange,
+        args.preset,
     );
 
     // instantiate and load image
@@ -148,22 +117,21 @@ fn main() {
         // save each sliced image
         resized_images.for_each(|(img, z)| {
             img.iter_tiles(z)
-                .collect::<Vec<(SubImage<&DynamicImage>, u32, u32)>>()
+                .collect::<Vec<Tile>>()
                 .par_iter()
-                .for_each(|(sub_img, x, y)| {
+                .for_each(|tile| {
                     if &args.tileformat == "png" {
-                        save_subimage_oxi(
-                            sub_img,
-                            x,
-                            y,
-                            z,
-                            &args.output_dir,
-                            &config,
-                            args.preset.unwrap(),
-                        )
-                        .unwrap()
+                        let oxipng = tile.convert_to_oxipng();
+                        let path = &args.output_dir.join(format!(
+                            "{z}-{x}-{y}.png",
+                            z = z,
+                            x = tile.x,
+                            y = tile.y
+                        ));
+                        let mut file = File::create(path).unwrap();
+                        file.write_all(&oxipng).unwrap();
                     } else {
-                        save_subimage(sub_img, x, y, z, &args.output_dir, &args.tileformat).unwrap()
+                        save_tile(tile, z, &args.output_dir, &args.tileformat).unwrap()
                     }
                 });
         });
