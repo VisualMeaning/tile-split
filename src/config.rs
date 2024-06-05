@@ -99,11 +99,12 @@ mod tests {
     #[test]
     // build config with only required args
     fn minimum_args() {
-        let config = Config::new(&Path::new("test.png"), 256, 5, None, None);
+        let config = Config::new(&Path::new("test.png"), 256, 5, None, None, None);
         assert_eq!(config.startzoomrangetoslice, 5);
         assert_eq!(config.starttargetrange, 0);
         assert_eq!(config.endzoomrangetoslice, 5);
         assert_eq!(config.endtargetrange, 1023);
+        assert_eq!(config.preset, None);
     }
 
     #[test]
@@ -115,11 +116,13 @@ mod tests {
             5,
             Some(RangeInclusive::new(0, 5)),
             None,
+            Some(2),
         );
         assert_eq!(config.startzoomrangetoslice, 0);
         assert_eq!(config.starttargetrange, 0);
         assert_eq!(config.endzoomrangetoslice, 5);
         assert_eq!(config.endtargetrange, 1023);
+        assert_eq!(config.preset, Some(2));
     }
 
     #[test]
@@ -131,6 +134,7 @@ mod tests {
             5,
             Some(RangeInclusive::new(0, 5)),
             Some(RangeInclusive::new(0, 341)),
+            Some(2),
         );
         assert_eq!(config.startzoomrangetoslice, 0);
         assert_eq!(config.starttargetrange, 0);
@@ -147,6 +151,7 @@ mod tests {
             5,
             Some(RangeInclusive::new(0, 5)),
             Some(RangeInclusive::new(341, 682)),
+            Some(2),
         );
         assert_eq!(config.startzoomrangetoslice, 5);
         assert_eq!(config.starttargetrange, 0);
@@ -163,6 +168,7 @@ mod tests {
             5,
             Some(RangeInclusive::new(0, 5)),
             Some(RangeInclusive::new(682, 1023)),
+            Some(2),
         );
         assert_eq!(config.startzoomrangetoslice, 5);
         assert_eq!(config.starttargetrange, 341);
@@ -179,6 +185,7 @@ mod tests {
             5,
             Some(RangeInclusive::new(0, 5)),
             Some(RangeInclusive::new(1023, 1365)),
+            Some(2),
         );
         assert_eq!(config.startzoomrangetoslice, 5);
         assert_eq!(config.starttargetrange, 682);
@@ -195,6 +202,7 @@ mod tests {
             5,
             Some(RangeInclusive::new(3, 5)),
             Some(RangeInclusive::new(0, 448)),
+            Some(2),
         );
         assert_eq!(config.startzoomrangetoslice, 3);
         assert_eq!(config.starttargetrange, 0);
@@ -211,6 +219,7 @@ mod tests {
             5,
             Some(RangeInclusive::new(3, 5)),
             Some(RangeInclusive::new(448, 896)),
+            Some(2),
         );
         assert_eq!(config.startzoomrangetoslice, 5);
         assert_eq!(config.starttargetrange, 128);
@@ -227,6 +236,7 @@ mod tests {
             5,
             Some(RangeInclusive::new(3, 5)),
             Some(RangeInclusive::new(896, 1344)),
+            Some(2),
         );
         assert_eq!(config.startzoomrangetoslice, 5);
         assert_eq!(config.starttargetrange, 576);

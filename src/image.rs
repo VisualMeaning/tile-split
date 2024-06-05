@@ -66,7 +66,7 @@ impl<'c> TileImage<'c> {
 
         TilesIterator {
             img: &self.img,
-            config: &self.config,
+            config: self.config,
             morton_idx,
             morton_idx_max,
             tilesize: self.config.tilesize,
