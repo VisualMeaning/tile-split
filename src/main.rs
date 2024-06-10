@@ -1,4 +1,5 @@
 use clap::Parser;
+use image::io::Reader as ImageReader;
 use rayon::prelude::*;
 use std::fs::File;
 use std::io::Write;
@@ -96,20 +97,29 @@ fn main() {
         args.preset,
     );
 
-    // instantiate and load image
-    let image = TileImage::new(&config, None);
+    // load image
+    let mut reader = match ImageReader::open(config.filename) {
+        Ok(reader) => reader,
+        Err(e) => panic!("Problem opening the image: {:?}", e),
+    };
+    // Default memory limit of 512MB is too small for level 6+ PNGs
+    reader.no_limits();
+    let loaded_image = match reader.decode() {
+        Ok(reader_image) => {
+            if reader_image.width() != reader_image.height() {
+                panic!("Image is not square!")
+            } else {
+                reader_image
+            }
+        }
+        Err(e) => panic!("Problem decoding the image: {:?}", e),
+    };
 
-    // resize (and save)
-    let resized_images =
-        RangeInclusive::new(config.startzoomrangetoslice, config.endzoomrangetoslice)
-            .into_par_iter()
-            .map(|x: u8| {
-                let t_size = config.tilesize << x;
-                (image.resize(t_size, t_size), x)
-            });
+    // resize
+    let resized_images = config.resize_range(&loaded_image);
 
     if args.save_resize {
-        resized_images.for_each(|(img, z)| {
+        resized_images.into_iter().for_each(|(img, z)| {
             img.save_image(z, &args.output_dir, &args.tileformat)
                 .unwrap()
         })

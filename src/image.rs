@@ -11,31 +11,6 @@ pub struct TileImage<'c> {
 }
 
 impl<'c> TileImage<'c> {
-    pub fn new(config: &'c Config, provided_image: Option<&'c DynamicImage>) -> Self {
-        let img = match provided_image {
-            // Use provided image if it exits
-            Some(provided_image) => provided_image.clone(),
-            // Load from config file path
-            None => {
-                let mut reader = match ImageReader::open(config.filename) {
-                    Ok(reader) => reader,
-                    Err(e) => panic!("Problem opening the image: {:?}", e),
-                };
-                // Default memory limit of 512MB is too small for level 6+ PNGs
-                reader.no_limits();
-
-                match reader.decode() {
-                    Ok(reader_image) => reader_image,
-                    Err(e) => panic!("Problem decoding the image: {:?}", e),
-                }
-            }
-        };
-        if img.width() != img.height() {
-            panic!("Image is not square!")
-        }
-        TileImage { config, img }
-    }
-
     pub fn iter_tiles(&self, index: u8) -> TilesIterator<'_> {
         let width_in_tiles = self.img.width() / self.config.tilesize;
         let height_in_tiles = self.img.height() / self.config.tilesize;
@@ -91,17 +66,6 @@ impl<'c> TileImage<'c> {
                 tile_size = self.config.tilesize,
                 max_zoom = self.config.zoomlevel,
             );
-        }
-    }
-
-    pub fn resize(&self, width: u32, height: u32) -> TileImage {
-        self._check_dimension();
-        let resized_image = self
-            .img
-            .resize(width, height, imageops::FilterType::Lanczos3);
-        TileImage {
-            config: self.config,
-            img: resized_image,
         }
     }
 
