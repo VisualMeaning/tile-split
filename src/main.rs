@@ -3,23 +3,10 @@ use image::io::Reader as ImageReader;
 use rayon::prelude::*;
 use std::fs::File;
 use std::io::Write;
+use std::ops::RangeInclusive;
 use std::path::PathBuf;
 use std::str::FromStr;
-use std::{ops::RangeInclusive, path::Path};
-use tile_split::{Config, Error, Tile, TileImage};
-
-fn save_tile(tile: &Tile, z: u8, folder: &Path, format: &str) -> Result<(), Error> {
-    let path = folder.join(format!(
-        "{z}-{x}-{y}.{fmt}",
-        z = z,
-        x = tile.x,
-        y = tile.y,
-        fmt = format
-    ));
-    tile.img.to_image().save(path)?;
-
-    Ok(())
-}
+use tile_split::Config;
 
 fn parse_range<T>(arg: &str) -> Result<RangeInclusive<T>, <T as FromStr>::Err>
 where
@@ -125,25 +112,31 @@ fn main() {
         })
     } else {
         // save each sliced image
-        resized_images.for_each(|(img, z)| {
-            img.iter_tiles(z)
-                .collect::<Vec<Tile>>()
-                .par_iter()
-                .for_each(|tile| {
-                    if &args.tileformat == "png" {
-                        let oxipng = tile.convert_to_oxipng();
-                        let path = &args.output_dir.join(format!(
-                            "{z}-{x}-{y}.png",
-                            z = z,
-                            x = tile.x,
-                            y = tile.y
-                        ));
-                        let mut file = File::create(path).unwrap();
-                        file.write_all(&oxipng).unwrap();
-                    } else {
-                        save_tile(tile, z, &args.output_dir, &args.tileformat).unwrap()
-                    }
-                });
+        resized_images.into_par_iter().for_each(|(img, z)| {
+            let tiles = img.slice_tiles(z);
+            tiles.into_par_iter().for_each(|tile| {
+                let img = tile.to_subimage();
+                if &args.tileformat == "png" {
+                    let oxipng = tile.convert_to_oxipng(img);
+                    let path = &args.output_dir.join(format!(
+                        "{z}-{x}-{y}.png",
+                        z = z,
+                        x = tile.x,
+                        y = tile.y
+                    ));
+                    let mut file = File::create(path).unwrap();
+                    file.write_all(&oxipng).unwrap();
+                } else {
+                    let path = &args.output_dir.join(format!(
+                        "{z}-{x}-{y}.{fmt}",
+                        z = z,
+                        x = tile.x,
+                        y = tile.y,
+                        fmt = &args.tileformat
+                    ));
+                    img.to_image().save(path).unwrap();
+                }
+            });
         });
     }
 }
