@@ -76,7 +76,6 @@ fn main() {
     std::fs::create_dir_all(&args.output_dir).unwrap();
 
     let config = Config::new(
-        &args.filename,
         args.tilesize,
         args.zoomlevel,
         args.zoomrange,
@@ -85,7 +84,7 @@ fn main() {
     );
 
     // load image
-    let mut reader = match ImageReader::open(config.filename) {
+    let mut reader = match ImageReader::open(&args.filename) {
         Ok(reader) => reader,
         Err(e) => panic!("Problem opening the image: {:?}", e),
     };

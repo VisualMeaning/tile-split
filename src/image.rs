@@ -6,7 +6,7 @@ use std::path::Path;
 use zorder::coord_of;
 
 pub struct TileImage<'c> {
-    pub config: &'c Config<'c>,
+    pub config: &'c Config,
     pub img: DynamicImage,
 }
 
@@ -76,7 +76,7 @@ impl<'c> TileImage<'c> {
 }
 
 pub struct Tile<'c> {
-    pub config: &'c Config<'c>,
+    pub config: &'c Config,
     pub parent_img: &'c DynamicImage,
     pub x: u32,
     pub y: u32,
