@@ -1,7 +1,6 @@
 use crate::Config;
 use image::GenericImageView;
 use image::{DynamicImage, ImageResult, SubImage};
-use rayon::prelude::*;
 use std::path::Path;
 use zorder::coord_of;
 
@@ -34,7 +33,6 @@ impl<'c> TileImage<'c> {
         }
 
         targetrangetoslice
-            .into_par_iter()
             .map(|morton_idx| {
                 let coord = coord_of(morton_idx);
                 let x = coord.0 as u32;

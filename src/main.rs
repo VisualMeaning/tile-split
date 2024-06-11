@@ -111,7 +111,7 @@ fn main() {
         })
     } else {
         // save each sliced image
-        resized_images.into_par_iter().for_each(|(img, z)| {
+        resized_images.into_iter().for_each(|(img, z)| {
             let tiles = img.slice_tiles(z);
             tiles.into_par_iter().for_each(|tile| {
                 let img = tile.to_subimage();
