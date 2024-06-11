@@ -114,7 +114,7 @@ impl Config {
 
     pub fn resize_range(&self, img: &DynamicImage) -> Vec<(TileImage, u8)> {
         self._check_img_dimension(img);
-        RangeInclusive::new(self.startzoomrangetoslice, self.endzoomrangetoslice)
+        (self.startzoomrangetoslice..=self.endzoomrangetoslice)
             .into_par_iter()
             .map(|x: u8| {
                 let t_size = self.tilesize << x;

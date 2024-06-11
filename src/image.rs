@@ -16,7 +16,7 @@ impl<'c> TileImage<'c> {
         let height_in_tiles = self.img.height() / self.config.tilesize;
         let morton_idx_max = width_in_tiles * height_in_tiles;
 
-        let mut targetrangetoslice = 0..=morton_idx_max;
+        let mut targetrangetoslice = 0..=morton_idx_max - 1;
         // if startzoomrangetoslice is the same as endzoomrangetoslice,
         // then tiles to be sliced in this function are from same zoom level
         if self.config.startzoomrangetoslice == self.config.endzoomrangetoslice {
