@@ -92,28 +92,7 @@ impl Config {
         }
     }
 
-    fn _check_img_dimension(&self, img: &DynamicImage) {
-        // TODO: work with any dimension (albeit square image),
-        // resize to proper zoom size then split into tiles of config.tilesize side.
-        if self.endzoomrangetoslice > self.zoomlevel {
-            panic!("Zoom range has value(s) larger than zoom level.");
-        }
-        let (img_width, img_height) = (img.width(), img.height());
-        let max_dimension_size = self.tilesize << self.zoomlevel;
-        if img_width != max_dimension_size || img_height != max_dimension_size {
-            panic!(
-                "Image of size {w}x{h} cannot be split into
-                tiles of size {tile_size} and max zoom level {max_zoom}.",
-                w = img_width,
-                h = img_height,
-                tile_size = self.tilesize,
-                max_zoom = self.zoomlevel,
-            );
-        }
-    }
-
     pub fn resize_range(&self, img: &DynamicImage) -> Vec<(TileImage, u8)> {
-        self._check_img_dimension(img);
         (self.startzoomrangetoslice..=self.endzoomrangetoslice)
             .into_par_iter()
             .map(|x: u8| {
