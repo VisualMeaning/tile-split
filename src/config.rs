@@ -1,23 +1,28 @@
 use std::ops::RangeInclusive;
-use std::path::Path;
 
-pub struct Config<'a> {
-    pub filename: &'a Path, // $1
-    pub tilesize: u32,      // 256
-    pub zoomlevel: u8,      // eg 5
+use image::{imageops, DynamicImage};
+use rayon::prelude::*;
+
+use crate::TileImage;
+
+pub struct Config {
+    pub tilesize: u32, // 256
+    pub zoomlevel: u8, // eg 5
+    pub preset: Option<u8>,
     pub startzoomrangetoslice: u8,
     pub endzoomrangetoslice: u8,
     pub starttargetrange: u32,
     pub endtargetrange: u32,
 }
 
-impl<'a> Config<'a> {
+impl Config {
     pub fn new(
-        filename: &'a Path,                       // $1
+        // $1
         tilesize: u32,                            // 256
         zoomlevel: u8,                            // eg 5
         zoomrange: Option<RangeInclusive<u8>>,    // eg 0 - 5
         targetrange: Option<RangeInclusive<u32>>, //eg 0 - 500
+        preset: Option<u8>,
     ) -> Self {
         let zomr = zoomrange.unwrap_or(zoomlevel..=zoomlevel);
         // total number of tiles required in zoomrange
@@ -78,56 +83,66 @@ impl<'a> Config<'a> {
 
         Config {
             tilesize,
-            filename,
             zoomlevel,
+            preset,
             startzoomrangetoslice,
             endzoomrangetoslice,
             starttargetrange,
             endtargetrange,
         }
     }
+
+    pub fn resize_range(&self, img: &DynamicImage) -> Vec<(TileImage, u8)> {
+        (self.startzoomrangetoslice..=self.endzoomrangetoslice)
+            .into_par_iter()
+            .map(|x: u8| {
+                let t_size = self.tilesize << x;
+                let resized_img = TileImage {
+                    config: self,
+                    img: img.resize(t_size, t_size, imageops::FilterType::Lanczos3),
+                };
+                (resized_img, x)
+            })
+            .collect()
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::Config;
-    use std::{ops::RangeInclusive, path::Path};
+    use std::ops::RangeInclusive;
 
     #[test]
     // build config with only required args
     fn minimum_args() {
-        let config = Config::new(&Path::new("test.png"), 256, 5, None, None);
+        let config = Config::new(256, 5, None, None, None);
         assert_eq!(config.startzoomrangetoslice, 5);
         assert_eq!(config.starttargetrange, 0);
         assert_eq!(config.endzoomrangetoslice, 5);
         assert_eq!(config.endtargetrange, 1023);
+        assert_eq!(config.preset, None);
     }
 
     #[test]
     // slice all tiles
     fn full_zoom() {
-        let config = Config::new(
-            &Path::new("test.png"),
-            256,
-            5,
-            Some(RangeInclusive::new(0, 5)),
-            None,
-        );
+        let config = Config::new(256, 5, Some(RangeInclusive::new(0, 5)), None, Some(2));
         assert_eq!(config.startzoomrangetoslice, 0);
         assert_eq!(config.starttargetrange, 0);
         assert_eq!(config.endzoomrangetoslice, 5);
         assert_eq!(config.endtargetrange, 1023);
+        assert_eq!(config.preset, Some(2));
     }
 
     #[test]
     // slice the first 341 tiles out of all tiles
     fn full_zoom_1() {
         let config = Config::new(
-            &Path::new("test.png"),
             256,
             5,
             Some(RangeInclusive::new(0, 5)),
             Some(RangeInclusive::new(0, 341)),
+            Some(2),
         );
         assert_eq!(config.startzoomrangetoslice, 0);
         assert_eq!(config.starttargetrange, 0);
@@ -139,11 +154,11 @@ mod tests {
     // slice the second 341 tiles out of all tiles
     fn full_zoom_2() {
         let config = Config::new(
-            &Path::new("test.png"),
             256,
             5,
             Some(RangeInclusive::new(0, 5)),
             Some(RangeInclusive::new(341, 682)),
+            Some(2),
         );
         assert_eq!(config.startzoomrangetoslice, 5);
         assert_eq!(config.starttargetrange, 0);
@@ -155,11 +170,11 @@ mod tests {
     // slice the third 341 tiles out of all tiles
     fn full_zoom_3() {
         let config = Config::new(
-            &Path::new("test.png"),
             256,
             5,
             Some(RangeInclusive::new(0, 5)),
             Some(RangeInclusive::new(682, 1023)),
+            Some(2),
         );
         assert_eq!(config.startzoomrangetoslice, 5);
         assert_eq!(config.starttargetrange, 341);
@@ -171,11 +186,11 @@ mod tests {
     // slice the remaining tiles out of all tiles
     fn full_zoom_4() {
         let config = Config::new(
-            &Path::new("test.png"),
             256,
             5,
             Some(RangeInclusive::new(0, 5)),
             Some(RangeInclusive::new(1023, 1365)),
+            Some(2),
         );
         assert_eq!(config.startzoomrangetoslice, 5);
         assert_eq!(config.starttargetrange, 682);
@@ -187,11 +202,11 @@ mod tests {
     // slice the first 448 tiles out of all tiles
     fn half_zoom_1() {
         let config = Config::new(
-            &Path::new("test.png"),
             256,
             5,
             Some(RangeInclusive::new(3, 5)),
             Some(RangeInclusive::new(0, 448)),
+            Some(2),
         );
         assert_eq!(config.startzoomrangetoslice, 3);
         assert_eq!(config.starttargetrange, 0);
@@ -203,11 +218,11 @@ mod tests {
     // slice the second 448 tiles out of all tiles
     fn half_zoom_2() {
         let config = Config::new(
-            &Path::new("test.png"),
             256,
             5,
             Some(RangeInclusive::new(3, 5)),
             Some(RangeInclusive::new(448, 896)),
+            Some(2),
         );
         assert_eq!(config.startzoomrangetoslice, 5);
         assert_eq!(config.starttargetrange, 128);
@@ -219,11 +234,11 @@ mod tests {
     // slice the remaining tiles out of all tiles
     fn half_zoom_3() {
         let config = Config::new(
-            &Path::new("test.png"),
             256,
             5,
             Some(RangeInclusive::new(3, 5)),
             Some(RangeInclusive::new(896, 1344)),
+            Some(2),
         );
         assert_eq!(config.startzoomrangetoslice, 5);
         assert_eq!(config.starttargetrange, 576);

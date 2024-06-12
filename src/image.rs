@@ -1,55 +1,50 @@
 use crate::Config;
-use image::{imageops, GenericImageView};
-use image::{io::Reader as ImageReader, DynamicImage, SubImage};
-use std::ops::RangeInclusive;
+use image::GenericImageView;
+use image::{DynamicImage, ImageResult, SubImage};
+use std::path::Path;
 use zorder::coord_of;
 
 pub struct TileImage<'c> {
-    pub config: &'c Config<'c>,
+    pub config: &'c Config,
     pub img: DynamicImage,
 }
 
 impl<'c> TileImage<'c> {
-    pub fn new(config: &'c Config) -> Self {
-        let mut reader = match ImageReader::open(config.filename) {
-            Ok(reader) => reader,
-            Err(e) => panic!("Problem opening the image: {:?}", e),
-        };
-        // Default memory limit of 512MB is too small for level 6+ PNGs
-        reader.no_limits();
-
-        let img = match reader.decode() {
-            Ok(img) => img,
-            Err(e) => panic!("Problem decoding the image: {:?}", e),
-        };
-
-        if img.width() != img.height() {
-            panic!("Image is not square!")
-        }
-        TileImage { config, img }
-    }
-
-    pub fn iter_tiles<'d>(
-        &self,
-        img: &'d DynamicImage,
-        targetrangetoslice: Option<RangeInclusive<u32>>,
-    ) -> TilesIterator<'d> {
-        let width_in_tiles = img.width() / self.config.tilesize;
-        let height_in_tiles = img.height() / self.config.tilesize;
+    pub fn slice_tiles(&self, index: u8) -> Vec<Tile> {
+        let width_in_tiles = self.img.width() / self.config.tilesize;
+        let height_in_tiles = self.img.height() / self.config.tilesize;
         let morton_idx_max = width_in_tiles * height_in_tiles;
 
-        let morton_idx = match &targetrangetoslice {
-            Some(targetrange) => *targetrange.start(),
-            None => 0,
-        };
-
-        TilesIterator {
-            img,
-            morton_idx,
-            morton_idx_max,
-            tilesize: self.config.tilesize,
-            targetrange: targetrangetoslice.clone(),
+        let mut targetrangetoslice = 0..=morton_idx_max - 1;
+        // if startzoomrangetoslice is the same as endzoomrangetoslice,
+        // then tiles to be sliced in this function are from same zoom level
+        if self.config.startzoomrangetoslice == self.config.endzoomrangetoslice {
+            if index == self.config.endzoomrangetoslice {
+                targetrangetoslice = self.config.starttargetrange..=self.config.endtargetrange;
+            }
+        // otherwise, the start zoom level should slice tiles from starttargetrange to end,
+        // the end zoom level should slice tiles from 0 to endtargetrange
+        } else if index == self.config.startzoomrangetoslice {
+            if index > 0 {
+                targetrangetoslice = self.config.starttargetrange..=(1 << (index * 2)) - 1;
+            }
+        } else if index == self.config.endzoomrangetoslice {
+            targetrangetoslice = 0..=self.config.endtargetrange;
         }
+
+        targetrangetoslice
+            .map(|morton_idx| {
+                let coord = coord_of(morton_idx);
+                let x = coord.0 as u32;
+                let y = coord.1 as u32;
+                Tile {
+                    config: self.config,
+                    parent_img: &self.img,
+                    x,
+                    y,
+                }
+            })
+            .collect()
     }
 
     fn _check_dimension(&self) {
@@ -72,39 +67,36 @@ impl<'c> TileImage<'c> {
         }
     }
 
-    pub fn resize(&self, width: u32, height: u32) -> DynamicImage {
-        self._check_dimension();
+    pub fn save_image(&self, z: u8, folder: &Path, tileformat: &str) -> ImageResult<()> {
         self.img
-            .resize(width, height, imageops::FilterType::Lanczos3)
+            .save(folder.join(format!("{z}.{fmt}", z = z, fmt = tileformat)))
     }
 }
 
-pub struct TilesIterator<'d> {
-    img: &'d DynamicImage,
-    morton_idx: u32,
-    morton_idx_max: u32,
-    tilesize: u32,
-    targetrange: Option<RangeInclusive<u32>>,
+pub struct Tile<'c> {
+    pub config: &'c Config,
+    pub parent_img: &'c DynamicImage,
+    pub x: u32,
+    pub y: u32,
 }
 
-impl<'d> Iterator for TilesIterator<'d> {
-    type Item = (SubImage<&'d DynamicImage>, u32, u32);
-    fn next(&mut self) -> Option<Self::Item> {
-        // Reaching the end of slicing, return None
-        let coord = coord_of(self.morton_idx);
-        let x = coord.0 as u32;
-        let y = coord.1 as u32;
-        match &self.targetrange {
-            Some(targetrange) if !targetrange.contains(&self.morton_idx) => None,
-            None if self.morton_idx == self.morton_idx_max => None,
-            _ => {
-                let x1 = x * self.tilesize;
-                let y1 = y * self.tilesize;
-                // Slice image
-                let result = (self.img.view(x1, y1, self.tilesize, self.tilesize), x, y);
-                self.morton_idx += 1;
-                Some(result)
-            }
-        }
+impl<'c> Tile<'c> {
+    pub fn to_subimage(&self) -> SubImage<&DynamicImage> {
+        let ts = self.config.tilesize;
+        self.parent_img.view(self.x * ts, self.y * ts, ts, ts)
+    }
+
+    pub fn convert_to_oxipng(&self, img: SubImage<&DynamicImage>) -> Vec<u8> {
+        let ts = self.config.tilesize;
+        oxipng::RawImage::new(
+            ts,
+            ts,
+            oxipng::ColorType::RGBA,
+            oxipng::BitDepth::Eight,
+            img.to_image().into_raw(),
+        )
+        .unwrap()
+        .create_optimized_png(&oxipng::Options::from_preset(self.config.preset.unwrap()))
+        .unwrap()
     }
 }
