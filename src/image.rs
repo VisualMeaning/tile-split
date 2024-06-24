@@ -14,6 +14,26 @@ impl<'c> TileImage<'c> {
         let width_in_tiles = self.img.width() / self.config.tilesize;
         let height_in_tiles = self.img.height() / self.config.tilesize;
         let morton_idx_max = width_in_tiles * height_in_tiles;
+        let tileimage_coord: (u16, u16) = match &self.config.parentzoomlevel {
+            None => (1, 1),
+            Some(parentzoomlevel) => {
+                if parentzoomlevel > &self.config.zoomlevel {
+                    coord_of(self.config.indexforzoom.into())
+                } else {
+                    (1, 1)
+                }
+            }
+        };
+        let output_level = match &self.config.parentzoomlevel {
+            None => index,
+            Some(parentzoomlevel) => {
+                if parentzoomlevel > &self.config.zoomlevel {
+                    parentzoomlevel.clone()
+                } else {
+                    index
+                }
+            }
+        };
 
         let mut targetrangetoslice = 0..=morton_idx_max - 1;
         // if startzoomrangetoslice is the same as endzoomrangetoslice,
@@ -35,13 +55,18 @@ impl<'c> TileImage<'c> {
         targetrangetoslice
             .map(|morton_idx| {
                 let coord = coord_of(morton_idx);
-                let x = coord.0 as u32;
-                let y = coord.1 as u32;
+                let tilename = format!(
+                    "{z}-{x}-{y}",
+                    z = output_level,
+                    x = (coord.0 * tileimage_coord.0) as u32,
+                    y = (coord.1 * tileimage_coord.1) as u32
+                );
                 Tile {
                     config: self.config,
                     parent_img: &self.img,
-                    x,
-                    y,
+                    x: coord.0 as u32,
+                    y: coord.1 as u32,
+                    name: tilename,
                 }
             })
             .collect()
@@ -78,6 +103,7 @@ pub struct Tile<'c> {
     pub parent_img: &'c DynamicImage,
     pub x: u32,
     pub y: u32,
+    pub name: String,
 }
 
 impl<'c> Tile<'c> {
