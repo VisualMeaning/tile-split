@@ -41,7 +41,7 @@ impl Config {
             // total number of tiles required in zoomrange
             let mut totaltiles = 0;
             zomr.clone().for_each(|x| {
-                totaltiles += 1 << (x * 2);
+                totaltiles += (1 << (x * 2)) * 256 * 256 / tilesize.pow(2);
             });
             // number of tiles sliced
             let tilessliced = match &targetrange {
@@ -71,7 +71,7 @@ impl Config {
             // calculte startzoomrangetoslice and starttargetrange
             for i in zomr.clone() {
                 // number of tiles in this zoom level
-                let currentzoomtiles = 1 << (i * 2);
+                let currentzoomtiles = (1 << (i * 2)) * 256 * 256 / tilesize.pow(2);
                 if tilessum + currentzoomtiles > tilessliced {
                     startzoomrangetoslice = i;
                     starttargetrange = tilessliced - tilessum;
@@ -84,7 +84,7 @@ impl Config {
             // calculte endzoomrangetoslice and endtargetrange
             for i in zomr.clone() {
                 // number of tiles in this zoom level
-                let currentzoomtiles = 1 << (i * 2);
+                let currentzoomtiles = (1 << (i * 2)) * 256 * 256 / tilesize.pow(2);
                 if tilessum + currentzoomtiles >= tilessliced + tilestoslice {
                     endzoomrangetoslice = i;
                     endtargetrange = tilessliced + tilestoslice - tilessum - 1;
@@ -261,5 +261,21 @@ mod tests {
         );
         assert_eq!(config.zoomrangetoslice, 5..=5);
         assert_eq!(config.targetrangetoslice, 576..=1023);
+    }
+
+    #[test]
+    // slice level 6 tiles to 4 level 5 tiles
+    fn tilesize_level_5() {
+        let config = Config::new(
+            8192,
+            6,
+            None,
+            0,
+            Some(RangeInclusive::new(6, 6)),
+            None,
+            Some(2),
+        );
+        assert_eq!(config.zoomrangetoslice, 6..=6);
+        assert_eq!(config.targetrangetoslice, 0..=3);
     }
 }
