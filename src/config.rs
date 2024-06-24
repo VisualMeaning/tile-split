@@ -11,10 +11,8 @@ pub struct Config {
     pub parentzoomlevel: Option<u8>,
     pub indexforzoom: u8,
     pub preset: Option<u8>,
-    pub startzoomrangetoslice: u8,
-    pub endzoomrangetoslice: u8,
-    pub starttargetrange: u32,
-    pub endtargetrange: u32,
+    pub zoomrangetoslice: RangeInclusive<u8>,
+    pub targetrangetoslice: RangeInclusive<u32>,
 }
 
 impl Config {
@@ -35,10 +33,8 @@ impl Config {
                 parentzoomlevel,
                 indexforzoom,
                 preset,
-                startzoomrangetoslice: 5,
-                endzoomrangetoslice: 5,
-                starttargetrange: 0,
-                endtargetrange: 1023,
+                zoomrangetoslice: 5..=5,
+                targetrangetoslice: 0..=1023,
             }
         } else {
             let zomr = zoomrange.unwrap_or(zoomlevel..=zoomlevel);
@@ -103,16 +99,14 @@ impl Config {
                 parentzoomlevel,
                 indexforzoom,
                 preset,
-                startzoomrangetoslice,
-                endzoomrangetoslice,
-                starttargetrange,
-                endtargetrange,
+                zoomrangetoslice: startzoomrangetoslice..=endzoomrangetoslice,
+                targetrangetoslice: starttargetrange..=endtargetrange,
             }
         }
     }
 
     pub fn resize_range(&self, img: &DynamicImage) -> Vec<(TileImage, u8)> {
-        (self.startzoomrangetoslice..=self.endzoomrangetoslice)
+        <RangeInclusive<u8> as Clone>::clone(&self.zoomrangetoslice)
             .into_par_iter()
             .map(|x: u8| {
                 let t_size = self.tilesize << x;
@@ -135,10 +129,8 @@ mod tests {
     // build config with only required args
     fn minimum_args() {
         let config = Config::new(256, 5, None, 0, None, None, None);
-        assert_eq!(config.startzoomrangetoslice, 5);
-        assert_eq!(config.starttargetrange, 0);
-        assert_eq!(config.endzoomrangetoslice, 5);
-        assert_eq!(config.endtargetrange, 1023);
+        assert_eq!(config.zoomrangetoslice, 5..=5);
+        assert_eq!(config.targetrangetoslice, 0..=1023);
         assert_eq!(config.preset, None);
     }
 
@@ -154,10 +146,8 @@ mod tests {
             None,
             Some(2),
         );
-        assert_eq!(config.startzoomrangetoslice, 0);
-        assert_eq!(config.starttargetrange, 0);
-        assert_eq!(config.endzoomrangetoslice, 5);
-        assert_eq!(config.endtargetrange, 1023);
+        assert_eq!(config.zoomrangetoslice, 0..=5);
+        assert_eq!(config.targetrangetoslice, 0..=1023);
         assert_eq!(config.preset, Some(2));
     }
 
@@ -173,10 +163,8 @@ mod tests {
             Some(RangeInclusive::new(0, 341)),
             Some(2),
         );
-        assert_eq!(config.startzoomrangetoslice, 0);
-        assert_eq!(config.starttargetrange, 0);
-        assert_eq!(config.endzoomrangetoslice, 4);
-        assert_eq!(config.endtargetrange, 255);
+        assert_eq!(config.zoomrangetoslice, 0..=4);
+        assert_eq!(config.targetrangetoslice, 0..=255);
     }
 
     #[test]
@@ -191,10 +179,8 @@ mod tests {
             Some(RangeInclusive::new(341, 682)),
             Some(2),
         );
-        assert_eq!(config.startzoomrangetoslice, 5);
-        assert_eq!(config.starttargetrange, 0);
-        assert_eq!(config.endzoomrangetoslice, 5);
-        assert_eq!(config.endtargetrange, 340);
+        assert_eq!(config.zoomrangetoslice, 5..=5);
+        assert_eq!(config.targetrangetoslice, 0..=340);
     }
 
     #[test]
@@ -209,10 +195,8 @@ mod tests {
             Some(RangeInclusive::new(682, 1023)),
             Some(2),
         );
-        assert_eq!(config.startzoomrangetoslice, 5);
-        assert_eq!(config.starttargetrange, 341);
-        assert_eq!(config.endzoomrangetoslice, 5);
-        assert_eq!(config.endtargetrange, 681);
+        assert_eq!(config.zoomrangetoslice, 5..=5);
+        assert_eq!(config.targetrangetoslice, 341..=681);
     }
 
     #[test]
@@ -227,10 +211,8 @@ mod tests {
             Some(RangeInclusive::new(1023, 1365)),
             Some(2),
         );
-        assert_eq!(config.startzoomrangetoslice, 5);
-        assert_eq!(config.starttargetrange, 682);
-        assert_eq!(config.endzoomrangetoslice, 5);
-        assert_eq!(config.endtargetrange, 1023);
+        assert_eq!(config.zoomrangetoslice, 5..=5);
+        assert_eq!(config.targetrangetoslice, 682..=1023);
     }
 
     #[test]
@@ -245,10 +227,8 @@ mod tests {
             Some(RangeInclusive::new(0, 448)),
             Some(2),
         );
-        assert_eq!(config.startzoomrangetoslice, 3);
-        assert_eq!(config.starttargetrange, 0);
-        assert_eq!(config.endzoomrangetoslice, 5);
-        assert_eq!(config.endtargetrange, 127);
+        assert_eq!(config.zoomrangetoslice, 3..=5);
+        assert_eq!(config.targetrangetoslice, 0..=127);
     }
 
     #[test]
@@ -263,10 +243,8 @@ mod tests {
             Some(RangeInclusive::new(448, 896)),
             Some(2),
         );
-        assert_eq!(config.startzoomrangetoslice, 5);
-        assert_eq!(config.starttargetrange, 128);
-        assert_eq!(config.endzoomrangetoslice, 5);
-        assert_eq!(config.endtargetrange, 575);
+        assert_eq!(config.zoomrangetoslice, 5..=5);
+        assert_eq!(config.targetrangetoslice, 128..=575);
     }
 
     #[test]
@@ -281,9 +259,7 @@ mod tests {
             Some(RangeInclusive::new(896, 1344)),
             Some(2),
         );
-        assert_eq!(config.startzoomrangetoslice, 5);
-        assert_eq!(config.starttargetrange, 576);
-        assert_eq!(config.endzoomrangetoslice, 5);
-        assert_eq!(config.endtargetrange, 1023);
+        assert_eq!(config.zoomrangetoslice, 5..=5);
+        assert_eq!(config.targetrangetoslice, 576..=1023);
     }
 }
