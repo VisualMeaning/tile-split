@@ -26,8 +26,8 @@ impl Config {
         targetrange: Option<RangeInclusive<u32>>, //eg 0 - 500
         preset: Option<u8>,
     ) -> Self {
-        if parentzoomlevel.is_some() {
-            if parentzoomlevel.unwrap() > zoomlevel {
+        if let Some(parentzoomlevelvalue) = parentzoomlevel {
+            if parentzoomlevelvalue > zoomlevel {
                 Config {
                     tilesize,
                     zoomlevel,

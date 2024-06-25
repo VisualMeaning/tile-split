@@ -28,7 +28,7 @@ impl<'c> TileImage<'c> {
             None => index,
             Some(parentzoomlevel) => {
                 if parentzoomlevel > &self.config.zoomlevel {
-                    parentzoomlevel.clone()
+                    *parentzoomlevel
                 } else {
                     index
                 }
