@@ -271,8 +271,16 @@ mod tests {
 
     #[test]
     // slice the third level 5 sub image of a level 6 image
-    fn sub_image_1() {
+    fn sub_image_level_6() {
         let config = Config::new(256, 5, Some(6), 2, None, None, Some(2));
+        assert_eq!(config.zoomrangetoslice, 5..=5);
+        assert_eq!(config.targetrangetoslice, 0..=1023);
+    }
+
+    #[test]
+    // slice the 15th level 5 sub image of a level 7 image
+    fn sub_image_level_7() {
+        let config = Config::new(256, 5, Some(7), 15, None, None, Some(2));
         assert_eq!(config.zoomrangetoslice, 5..=5);
         assert_eq!(config.targetrangetoslice, 0..=1023);
     }

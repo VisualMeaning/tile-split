@@ -15,12 +15,12 @@ impl<'c> TileImage<'c> {
         let height_in_tiles = self.img.height() / self.config.tilesize;
         let morton_idx_max = width_in_tiles * height_in_tiles;
         let tileimage_coord: (u16, u16) = match &self.config.parentzoomlevel {
-            None => (1, 1),
+            None => (0, 0),
             Some(parentzoomlevel) => {
                 if parentzoomlevel > &self.config.zoomlevel {
                     coord_of(self.config.indexforzoom.into())
                 } else {
-                    (1, 1)
+                    (0, 0)
                 }
             }
         };
