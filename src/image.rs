@@ -60,8 +60,8 @@ impl<'c> TileImage<'c> {
                 let tilename = format!(
                     "{z}-{x}-{y}",
                     z = output_level,
-                    x = (coord.0 * tileimage_coord.0) as u32,
-                    y = (coord.1 * tileimage_coord.1) as u32
+                    x = (coord.0 + (tileimage_coord.0 * 32)) as u32,
+                    y = (coord.1 + (tileimage_coord.1 * 32)) as u32
                 );
                 Tile {
                     config: self.config,
