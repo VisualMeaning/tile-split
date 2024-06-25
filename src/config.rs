@@ -26,15 +26,21 @@ impl Config {
         targetrange: Option<RangeInclusive<u32>>, //eg 0 - 500
         preset: Option<u8>,
     ) -> Self {
-        if parentzoomlevel.is_some() && parentzoomlevel.unwrap() > zoomlevel {
-            Config {
-                tilesize,
-                zoomlevel,
-                parentzoomlevel,
-                indexforzoom,
-                preset,
-                zoomrangetoslice: 5..=5,
-                targetrangetoslice: 0..=1023,
+        if parentzoomlevel.is_some() {
+            if parentzoomlevel.unwrap() > zoomlevel {
+                Config {
+                    tilesize,
+                    zoomlevel,
+                    parentzoomlevel,
+                    indexforzoom,
+                    preset,
+                    zoomrangetoslice: zoomlevel..=zoomlevel,
+                    targetrangetoslice: 0..=(1 << (zoomlevel * 2)) - 1,
+                }
+            } else {
+                panic!(
+                    "Parent zoom level number needs to be bigger than the input image zoom level."
+                )
             }
         } else {
             let zomr = zoomrange.unwrap_or(zoomlevel..=zoomlevel);
@@ -261,5 +267,13 @@ mod tests {
         );
         assert_eq!(config.zoomrangetoslice, 5..=5);
         assert_eq!(config.targetrangetoslice, 576..=1023);
+    }
+
+    #[test]
+    // slice the third level 5 sub image of a level 6 image
+    fn sub_image_1() {
+        let config = Config::new(256, 5, Some(6), 2, None, None, Some(2));
+        assert_eq!(config.zoomrangetoslice, 5..=5);
+        assert_eq!(config.targetrangetoslice, 0..=1023);
     }
 }
