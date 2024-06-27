@@ -27,20 +27,22 @@ impl Config {
         preset: Option<u8>,
     ) -> Self {
         if let Some(parentzoomlevelvalue) = parentzoomlevel {
-            if parentzoomlevelvalue > zoomlevel {
-                Config {
-                    tilesize,
-                    zoomlevel,
-                    parentzoomlevel,
-                    indexforzoom,
-                    preset,
-                    zoomrangetoslice: zoomlevel..=zoomlevel,
-                    targetrangetoslice: 0..=(1 << (zoomlevel * 2)) - 1,
-                }
-            } else {
+            if parentzoomlevelvalue <= zoomlevel {
                 panic!(
                     "Parent zoom level number needs to be bigger than the input image zoom level."
                 )
+            }
+            if indexforzoom > (1 << ((parentzoomlevelvalue - zoomlevel) * 2)) - 1 {
+                panic!("indexforzoom value is larger than allowed.")
+            }
+            Config {
+                tilesize,
+                zoomlevel,
+                parentzoomlevel,
+                indexforzoom,
+                preset,
+                zoomrangetoslice: zoomlevel..=zoomlevel,
+                targetrangetoslice: 0..=(1 << (zoomlevel * 2)) - 1,
             }
         } else {
             let zomr = zoomrange.unwrap_or(zoomlevel..=zoomlevel);
@@ -283,5 +285,26 @@ mod tests {
         let config = Config::new(256, 5, Some(7), 15, None, None, Some(2));
         assert_eq!(config.zoomrangetoslice, 5..=5);
         assert_eq!(config.targetrangetoslice, 0..=1023);
+    }
+
+    #[test]
+    #[should_panic]
+    // should panic if zoomlevel is larger than parentzoomlevel
+    fn sub_image_zoom_largerthan_parent() {
+        Config::new(256, 5, Some(4), 15, None, None, Some(2));
+    }
+
+    #[test]
+    #[should_panic]
+    // should panic if indexforzoom is larger than allowed
+    fn sub_image_wrong_indexforzoom_1() {
+        Config::new(256, 5, Some(6), 4, None, None, Some(2));
+    }
+
+    #[test]
+    #[should_panic]
+    // should panic if indexforzoom is larger than allowed
+    fn sub_image_wrong_indexforzoom_2() {
+        Config::new(256, 5, Some(7), 16, None, None, Some(2));
     }
 }
