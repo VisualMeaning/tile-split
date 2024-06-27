@@ -11,9 +11,8 @@ pub struct TileImage<'c> {
 
 impl<'c> TileImage<'c> {
     pub fn slice_tiles(&self, index: u8) -> Vec<Tile> {
-        let width_in_tiles = self.img.width() / self.config.tilesize;
-        let height_in_tiles = self.img.height() / self.config.tilesize;
-        let morton_idx_max = width_in_tiles * height_in_tiles;
+        let tiles_per_row = 1 << index;
+        let morton_idx_max = tiles_per_row * tiles_per_row;
         let tileimage_coord: (u16, u16) = match &self.config.parentzoomlevel {
             None => (0, 0),
             Some(parentzoomlevel) => {
@@ -60,8 +59,8 @@ impl<'c> TileImage<'c> {
                 let tilename = format!(
                     "{z}-{x}-{y}",
                     z = output_level,
-                    x = (coord.0 + (tileimage_coord.0 * 32)) as u32,
-                    y = (coord.1 + (tileimage_coord.1 * 32)) as u32
+                    x = (coord.0 + (tileimage_coord.0 * tiles_per_row as u16)) as u32,
+                    y = (coord.1 + (tileimage_coord.1 * tiles_per_row as u16)) as u32
                 );
                 Tile {
                     config: self.config,
