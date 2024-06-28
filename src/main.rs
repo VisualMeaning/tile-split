@@ -32,6 +32,14 @@ struct Args {
     #[arg(short = 'l', long, env)]
     zoomlevel: u8,
 
+    /// Parent zoomlevel of input sub PNG file.
+    #[arg(short = 'p', long, required(false))]
+    parentzoomlevel: Option<u8>,
+
+    /// Index of the input sub PNG.
+    #[arg(short = 'i', long, required(false), default_value("0"))]
+    indexforzoom: u8,
+
     /// Zoomrange to slice tiles for.
     #[arg(short='r', long, required(false), value_parser = parse_range::<u8>)]
     zoomrange: Option<RangeInclusive<u8>>,
@@ -78,6 +86,8 @@ fn main() {
     let config = Config::new(
         args.tilesize,
         args.zoomlevel,
+        args.parentzoomlevel,
+        args.indexforzoom,
         args.zoomrange,
         args.targetrange,
         args.preset,
@@ -117,20 +127,15 @@ fn main() {
                 let img = tile.to_subimage();
                 if &args.tileformat == "png" {
                     let oxipng = tile.convert_to_oxipng(img);
-                    let path = &args.output_dir.join(format!(
-                        "{z}-{x}-{y}.png",
-                        z = z,
-                        x = tile.x,
-                        y = tile.y
-                    ));
+                    let path = &args
+                        .output_dir
+                        .join(format!("{name}.png", name = tile.name));
                     let mut file = File::create(path).unwrap();
                     file.write_all(&oxipng).unwrap();
                 } else {
                     let path = &args.output_dir.join(format!(
-                        "{z}-{x}-{y}.{fmt}",
-                        z = z,
-                        x = tile.x,
-                        y = tile.y,
+                        "{name}.{fmt}",
+                        name = tile.name,
                         fmt = &args.tileformat
                     ));
                     img.to_image().save(path).unwrap();
