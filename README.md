@@ -38,6 +38,16 @@ For example, for a chunk size of 300 tiles per round, the arguments would be
 
 Note that we cannot upscale an input PNG to higher zoomlevels, only downscale -- so all zoomlevels passed via `--zoomrange` must be equal to or less than the input PNG zoomlevel passed via `--zoomlevel`.
 
+If `--parentzoomlevel` is provided, it indicates that the input PNG has the dimension of the `--zoomlevel` value and is sliced from an whole png of dimension `--parentzoomlevel`. `--indexforzoom` indicates the index of the input PNG among all the sliced ones (Note the index needs to follow Z-curve). If `--parentzoomlevel` is provided, `--zoomrange` and `--targetrange` will be ignored and the code will split the input PNG to all tiles and give it the correct names that corresponds to the parent zoom level location. These arguments are designed to be run by multiple lambda function to slice level 6 and level 7 PNGs.
+
+For example, if we have four level 5 dimension PNGs sliced from one whole level 6 PNG, by running
+
+    tile-split 5-0-0.png --zoomlevel 5 --parentzoomlevel 6 --indexforzoom 0
+    tile-split 5-1-0.png --zoomlevel 5 --parentzoomlevel 6 --indexforzoom 1
+    tile-split 5-0-1.png --zoomlevel 5 --parentzoomlevel 6 --indexforzoom 2
+    tile-split 5-1-1.png --zoomlevel 5 --parentzoomlevel 6 --indexforzoom 3
+This will output all 4096 tiles from level 6 with correct names.
+
 Run `tile-split --help` for more command description.
 
 ```
@@ -49,15 +59,30 @@ Arguments:
   <FILENAME>  Input PNG filename
 
 Options:
-  -l, --zoomlevel <ZOOMLEVEL>     Zoomlevel of input PNG file [env: ZOOMLEVEL=]
-  -r, --zoomrange <ZOOMRANGE>...  Zoomrange to slice tiles for
-  -t, --targetrange               Targetrange to slice subset of tiles. Optional.
-  -o, --output-dir <OUTPUT_DIR>   Location to write output tiles to [env: OUTPUT_DIR=] [default: out]
-  -s, --tilesize <TILESIZE>       Dimension of output tiles, in pixels [default: 256]
-  -f, --tileformat <TILEFORMAT>   Type of output tiles, currently unused [env: TILEFORMAT=] [default: png]
-      --save-resize               Save the resized files [env: SAVE_RESIZE=]
-  -h, --help                      Print help
-  -V, --version                   Print version
+  -l, --zoomlevel <ZOOMLEVEL>
+          Zoomlevel of input PNG file [env: ZOOMLEVEL=]
+  -p, --parentzoomlevel <PARENTZOOMLEVEL>
+          Parent zoomlevel of input sub PNG file
+  -i, --indexforzoom <INDEXFORZOOM>
+          Index of the input sub PNG [default: 0]
+  -r, --zoomrange <ZOOMRANGE>
+          Zoomrange to slice tiles for
+  -o, --output-dir <OUTPUT_DIR>
+          Location to write output tiles to [env: OUTPUT_DIR=] [default: out]
+      --tilesize <TILESIZE>
+          Dimension of output tiles, in pixels [default: 256]
+      --tileformat <TILEFORMAT>
+          Type of output tiles [env: TILEFORMAT=] [default: png]
+  -t, --targetrange <TARGETRANGE>
+          Subset morton range of tiles to slice
+      --preset <PRESET>
+          PNG compression preset [env: PRESET=]
+      --save-resize
+          Save the resized files [env: SAVE_RESIZE=]
+  -h, --help
+          Print help
+  -V, --version
+          Print version
 ```
 
 
