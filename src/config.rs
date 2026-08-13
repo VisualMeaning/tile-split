@@ -32,8 +32,9 @@ impl Config {
                     "Parent zoom level number needs to be bigger than the input image zoom level."
                 )
             }
-            if indexforzoom > (1 << ((parentzoomlevelvalue - zoomlevel) * 2)) - 1 {
-                panic!("indexforzoom value is larger than allowed.")
+            let max_allowed = (1u64 << ((parentzoomlevelvalue - zoomlevel) * 2)) - 1;
+            if (indexforzoom as u64) > max_allowed {
+                panic!("indexforzoom value is larger than allowed.");
             }
             Config {
                 tilesize,
@@ -285,6 +286,14 @@ mod tests {
         let config = Config::new(256, 5, Some(7), 15, None, None, Some(2));
         assert_eq!(config.zoomrangetoslice, 5..=5);
         assert_eq!(config.targetrangetoslice, 0..=1023);
+    }
+
+    #[test]
+    // allow indexforzoom values greater than 63 when parent zoom is much larger
+    fn sub_image_large_index() {
+        let config = Config::new(256, 3, Some(7), 212, None, None, Some(2));
+        assert_eq!(config.zoomrangetoslice, 3..=3);
+        assert_eq!(config.targetrangetoslice, 0..=63);
     }
 
     #[test]
