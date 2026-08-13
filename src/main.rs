@@ -75,7 +75,7 @@ fn main() {
     if args.preset.is_some() && &args.tileformat != "png" {
         eprintln!(
             "Error: The --preset argument cannot be used with --tileformat set to '{}'",
-            &args.tileformat
+            args.tileformat
         );
         std::process::exit(2);
     }
@@ -136,7 +136,7 @@ fn main() {
                     let path = &args.output_dir.join(format!(
                         "{name}.{fmt}",
                         name = tile.name,
-                        fmt = &args.tileformat
+                        fmt = args.tileformat
                     ));
                     img.to_image().save(path).unwrap();
                 }

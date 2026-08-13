@@ -114,7 +114,7 @@ impl Config {
         }
     }
 
-    pub fn resize_range(&self, img: &DynamicImage) -> Vec<(TileImage, u8)> {
+    pub fn resize_range(&self, img: &DynamicImage) -> Vec<(TileImage<'_>, u8)> {
         <RangeInclusive<u8> as Clone>::clone(&self.zoomrangetoslice)
             .into_par_iter()
             .map(|x: u8| {

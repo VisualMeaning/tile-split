@@ -10,18 +10,15 @@ pub struct TileImage<'c> {
 }
 
 impl<'c> TileImage<'c> {
-    pub fn slice_tiles(&self, index: u8) -> Vec<Tile> {
+    pub fn slice_tiles(&self, index: u8) -> Vec<Tile<'_>> {
         let tiles_per_row = 1 << index;
         let morton_idx_max = tiles_per_row * tiles_per_row;
         let tileimage_coord: (u16, u16) = match &self.config.parentzoomlevel {
             None => (0, 0),
-            Some(parentzoomlevel) => {
-                if parentzoomlevel > &self.config.zoomlevel {
-                    coord_of(self.config.indexforzoom.into())
-                } else {
-                    (0, 0)
-                }
+            Some(parentzoomlevel) if parentzoomlevel > &self.config.zoomlevel => {
+                coord_of(self.config.indexforzoom.into())
             }
+            _ => (0, 0),
         };
         let output_level = match &self.config.parentzoomlevel {
             None => index,
